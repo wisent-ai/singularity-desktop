@@ -13,4 +13,7 @@
 <key>LSMinimumSystemVersion</key><string>14.0</string>
 <key>NSHighResolutionCapable</key><true/>
 <key>NSPrincipalClass</key><string>NSApplication</string>
+<key>SUFeedURL</key><string>https://github.com/wisent-ai/singularity-desktop/releases/latest/download/appcast.xml</string>
+<key>SUPublicEDKey</key><string>VTPfm2MTF7ZhJSMJsh+gwtEmCPHLA9oTQMQJMahsClA=</string>
+<key>SUEnableAutomaticChecks</key><true/>
 </dict></plist>

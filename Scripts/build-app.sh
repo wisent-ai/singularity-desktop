@@ -16,6 +16,13 @@ BIN_DIR=$(swift build --package-path "$ROOT" -c release --show-bin-path)
 rm -rf "$APP"
 mkdir -p "$MACOS" "$FRAMEWORKS" "$RESOURCES"
 install -m 0644 "$ROOT/App/Info.plist" "$CONTENTS/Info.plist"
+if [ -n "${WISENT_RELEASE_VERSION:-}" ]; then
+  plutil -replace CFBundleShortVersionString -string "$WISENT_RELEASE_VERSION" "$CONTENTS/Info.plist"
+  plutil -replace CFBundleVersion -string "${WISENT_BUILD_NUMBER:-$WISENT_RELEASE_VERSION}" "$CONTENTS/Info.plist"
+fi
+if [ -n "${WISENT_UPDATE_FEED_URL:-}" ]; then
+  plutil -replace SUFeedURL -string "$WISENT_UPDATE_FEED_URL" "$CONTENTS/Info.plist"
+fi
 install -m 0755 "$BIN_DIR/Singularity" "$MACOS/Singularity"
 if [ -f "$ROOT/App/AppIcon.icns" ]; then
   install -m 0644 "$ROOT/App/AppIcon.icns" "$RESOURCES/AppIcon.icns"

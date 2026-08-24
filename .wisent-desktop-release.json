@@ -1,10 +1,11 @@
 {
-  "schema_version": 1,
-  "product": "singularity-desktop",
-  "display_name": "Singularity",
-  "platform": "macos",
-  "architecture": "arm64",
-  "bundle_identifier": "ai.wisent.singularity.desktop",
-  "executable": "Singularity",
-  "build_command": ["swift", "build", "-c", "release", "--product", "Singularity"]
+  "$schema": "https://github.com/wisent-ai/wisent-desktop-update/raw/main/release-manifest.schema.json",
+  "schema": 1,
+  "product": "Singularity",
+  "bundle_id": "ai.wisent.singularity.desktop",
+  "bundle_path": ".build/Singularity.app",
+  "build_command": "SINGULARITY_INSTALL_AFTER_BUILD=no ./Scripts/build-app.sh",
+  "archive_name": "Singularity-{version}.zip",
+  "feed_url": "https://github.com/wisent-ai/singularity-desktop/releases/latest/download/appcast.xml",
+  "minimum_system_version": "14.0"
 }
