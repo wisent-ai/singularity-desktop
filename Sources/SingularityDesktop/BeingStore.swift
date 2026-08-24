@@ -1,5 +1,6 @@
 import AppKit
 import Foundation
+import WisentErrors
 
 @MainActor
 final class BeingStore: ObservableObject {
@@ -49,7 +50,22 @@ final class BeingStore: ObservableObject {
             issue = nil
             refreshedAt = Date()
         } catch {
-            issue = error.localizedDescription
+            let message = error.localizedDescription
+            // The monitor re-reads every two seconds, so report only when the
+            // failure becomes user-visible state, not on every failed poll.
+            if issue != message {
+                let code = (error as? StoreFailure)?.message.hasPrefix("Missing regular file") == true
+                    ? "infra_down"
+                    : "unknown"
+                WisentFailureReporter.shared.report(
+                    failurePoint: "singularity.beingstore.read",
+                    code: code,
+                    service: "singularity",
+                    detail: message,
+                    impact: "The being's state and activity cannot be shown."
+                )
+            }
+            issue = message
         }
     }
 
