@@ -3,19 +3,37 @@ import SwiftUI
 import WisentDesignSystem
 import WisentDesktopUpdate
 
+@MainActor
+final class SingularityAppDelegate: NSObject, NSApplicationDelegate {
+    let store = BeingStore()
+    private var fallbackWindow: NSWindow?
+
+    func applicationDidFinishLaunching(_ notification: Notification) {
+        DispatchQueue.main.async { [self] in
+            fallbackWindow = wisentEnsureWindow(
+                title: "Singularity",
+                size: CGSize(width: 1_180, height: 760)
+            ) {
+                RootView(store: self.store)
+            }
+        }
+    }
+}
+
 @main
 struct SingularityApp: App {
-    @StateObject private var store = BeingStore()
+    @NSApplicationDelegateAdaptor(SingularityAppDelegate.self) private var delegate
     @StateObject private var updater = WisentUpdater()
 
     var body: some Scene {
         WindowGroup("Singularity") {
-            RootView(store: store)
-                .tint(WisentDesign.brand)
+            RootView(store: delegate.store)
                 .textSelection(.enabled)
         }
-        .defaultSize(width: 1180, height: 760)
+        .defaultSize(width: 1_180, height: 760)
         .windowResizability(.contentMinSize)
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
         .commands {
             CommandGroup(after: .appInfo) {
                 WisentCheckForUpdatesCommand(updater: updater)
