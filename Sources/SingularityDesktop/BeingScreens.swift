@@ -221,16 +221,6 @@ struct BeingEconomyScreen: View {
                     ])
                 }
             }
-
-            WisentCapabilityList(
-                title: "This desktop never executes",
-                items: [
-                    "Finance proposals or approvals",
-                    "Signing-key operations",
-                    "Revenue credits or cost debits",
-                ],
-                isAvailable: false
-            )
         }
     }
 }
