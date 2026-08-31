@@ -28,7 +28,6 @@ struct SingularityApp: App {
     var body: some Scene {
         WindowGroup("Singularity") {
             RootView(store: delegate.store)
-                .textSelection(.enabled)
         }
         .defaultSize(width: 1_180, height: 760)
         .windowResizability(.contentMinSize)

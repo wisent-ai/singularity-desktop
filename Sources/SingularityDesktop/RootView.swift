@@ -22,6 +22,22 @@ struct RootView: View {
         )
         .background(WisentDesign.canvas)
         .tint(WisentDesign.brand)
+        // Every fact Singularity reports is selectable, and therefore
+        // copyable. The window exists to state things a person then quotes
+        // somewhere else — a being's system prompt, a balance, an activity
+        // line, the sentence explaining why a state directory could not be
+        // read — and SwiftUI's `Text` refuses selection on macOS unless a
+        // view asks for it, which left 12 of 15 text sites dead to Cmd-C
+        // while three had been fixed one at a time.
+        //
+        // `.textSelection` travels through the environment, so one call here
+        // covers every screen, present and future, including the loading
+        // panel and the unavailable notice that `detail` renders instead of
+        // a screen. It sits on this body rather than in `SingularityApp`
+        // because both windows the app can open — the `WindowGroup` scene
+        // and the delegate's `wisentEnsureWindow` fallback — render exactly
+        // this view, so this is the one place that reaches both.
+        .textSelection(.enabled)
         .fileImporter(isPresented: $choosingDirectory, allowedContentTypes: [.folder]) { result in
             if case let .success(url) = result { store.selectDirectory(url) }
         }

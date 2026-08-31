@@ -125,7 +125,6 @@ struct BeingMindScreen: View {
                     Text(state.mind.systemPrompt)
                         .font(WisentTypeScale.body())
                         .foregroundStyle(WisentDesign.ink)
-                        .textSelection(.enabled)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -403,7 +402,6 @@ private struct TextListSection: View {
                                 Text(items[index])
                                     .font(WisentTypeScale.body())
                                     .foregroundStyle(WisentDesign.ink)
-                                    .textSelection(.enabled)
                                     .fixedSize(horizontal: false, vertical: true)
                                 Spacer(minLength: 0)
                             }
@@ -436,7 +434,6 @@ private struct BeingDenseRow: View {
             Text(detail)
                 .font(WisentTypeScale.identifierSmall())
                 .foregroundStyle(WisentDesign.secondary)
-                .textSelection(.enabled)
                 .lineLimit(2)
             Spacer(minLength: WisentDesign.Space.x3)
             if let meta {
