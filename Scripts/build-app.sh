@@ -70,6 +70,12 @@ if [ -d "$BIN_DIR/Sparkle.framework" ]; then
   fi
 fi
 
+# Shared Wisent sessions are stored by one fixed signed helper identity. A
+# packaged app without it would fall back to an isolated bundle-scoped Keychain
+# item and ask for another login.
+IDENTITY_HELPER="$CONTENTS/Helpers/WisentIdentityKeychainHelper"
+"$ROOT/.build/checkouts/wisent-desktop-auth/scripts/build-keychain-helper.sh" "$IDENTITY_HELPER"
+
 IDENTITY=${WISENT_CODESIGN_IDENTITY:-}
 if [ -z "$IDENTITY" ]; then
   IDENTITY=$(security find-identity -v -p codesigning 2>/dev/null | awk -F '"' '/Developer ID Application:/ {print $2; exit}')
@@ -81,6 +87,8 @@ fi
 if [ -d "$FRAMEWORKS/Sparkle.framework" ]; then
   codesign --force --deep --options runtime --timestamp=none --sign "$IDENTITY" "$FRAMEWORKS/Sparkle.framework"
 fi
+codesign --force --options runtime --timestamp=none --sign "$IDENTITY" \
+  --identifier ai.wisent.identity.keychain-helper "$IDENTITY_HELPER"
 codesign --force --options runtime --timestamp=none --sign "$IDENTITY" "$MACOS/Singularity"
 codesign --force --deep --options runtime --timestamp=none --sign "$IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"

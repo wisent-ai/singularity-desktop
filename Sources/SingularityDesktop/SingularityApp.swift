@@ -1,11 +1,13 @@
 import AppKit
 import SwiftUI
+import WisentAuth
 import WisentDesignSystem
 import WisentDesktopUpdate
 
 @MainActor
 final class SingularityAppDelegate: NSObject, NSApplicationDelegate {
     let store = BeingStore()
+    let auth = WisentAuthStore(productName: "Singularity")
     private var fallbackWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -14,7 +16,9 @@ final class SingularityAppDelegate: NSObject, NSApplicationDelegate {
                 title: "Singularity",
                 size: CGSize(width: 1_180, height: 760)
             ) {
-                RootView(store: self.store)
+                WisentAuthGate(store: self.auth) {
+                    RootView(store: self.store)
+                }
             }
         }
     }
@@ -27,7 +31,9 @@ struct SingularityApp: App {
 
     var body: some Scene {
         WindowGroup("Singularity") {
-            RootView(store: delegate.store)
+            WisentAuthGate(store: delegate.auth) {
+                RootView(store: delegate.store)
+            }
         }
         .defaultSize(width: 1_180, height: 760)
         .windowResizability(.contentMinSize)

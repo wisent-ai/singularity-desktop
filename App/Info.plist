@@ -10,6 +10,17 @@
 	<string>AppIcon</string>
 	<key>CFBundleIdentifier</key>
 	<string>ai.wisent.singularity.desktop</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Wisent Identity</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>ai.wisent.singularity.desktop</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
