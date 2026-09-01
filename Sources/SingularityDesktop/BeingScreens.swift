@@ -12,6 +12,7 @@ struct BeingLifeScreen: View {
     let state: BeingState
     let activity: [ActivityLine]
     let chrome: BeingScreenChrome
+    @ObservedObject var onboarding: BeingOnboardingController
 
     var body: some View {
         WisentScreen(
@@ -90,6 +91,10 @@ struct BeingLifeScreen: View {
                     }
                 }
             }
+
+            // Last on Life, the destination the window opens on: the one
+            // control that puts the first-run walkthrough back.
+            BeingWalkthroughSection(onboarding: onboarding)
         }
     }
 }

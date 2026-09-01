@@ -10,6 +10,7 @@ let package = Package(
         .package(url: "https://github.com/wisent-ai/wisent-components.git", exact: "0.8.1"),
         .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", exact: "0.3.1"),
         .package(url: "https://github.com/wisent-ai/wisent-errors.git", exact: "1.0.0"),
+        .package(url: "https://github.com/wisent-ai/echo.git", exact: "0.1.2"),
     ],
     targets: [
         .executableTarget(
@@ -19,6 +20,10 @@ let package = Package(
                 .product(name: "WisentDesignSystem", package: "wisent-components"),
                 .product(name: "WisentAuth", package: "wisent-desktop-auth"),
                 .product(name: "WisentErrors", package: "wisent-errors"),
+                .product(name: "WisentOnboarding", package: "echo"),
+            ],
+            resources: [
+                .process("Resources")
             ]
         ),
     ]

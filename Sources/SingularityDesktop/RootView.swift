@@ -4,6 +4,7 @@ import WisentDesignSystem
 
 struct RootView: View {
     @ObservedObject var store: BeingStore
+    @StateObject private var onboarding = BeingOnboardingController()
     @State private var destination: BeingDestination = .life
     @State private var choosingDirectory = false
 
@@ -42,6 +43,37 @@ struct RootView: View {
             if case let .success(url) = result { store.selectDirectory(url) }
         }
         .task { await store.monitor() }
+        .task { await onboarding.start() }
+        // The walkthrough sits over this window and nowhere else: one overlay
+        // driven by the controller's gate, so a completed journey is silent and
+        // an unloadable one never stands in front of the being.
+        .overlay {
+            if onboarding.isPresented {
+                BeingOnboardingView(
+                    onboarding: onboarding,
+                    beingLoaded: store.state != nil,
+                    readBeing: readBeing
+                )
+            }
+        }
+        // The last step is finished by a being, not by the button that closed
+        // the card: the store's decoded `state.json` arriving is the fact.
+        .onChange(of: store.state != nil) { _, loaded in
+            guard loaded else { return }
+            Task { await onboarding.beingStateObserved() }
+        }
+    }
+
+    /// The walkthrough's final step hands the window back. A being already
+    /// readable needs no folder prompt; otherwise the same importer the sidebar
+    /// opens is what the operator needs next.
+    private func readBeing() {
+        onboarding.prepareToReadBeing()
+        if store.state == nil {
+            choosingDirectory = true
+        } else {
+            Task { await onboarding.beingStateObserved() }
+        }
     }
 
     @ViewBuilder
@@ -68,7 +100,12 @@ struct RootView: View {
     private func screen(_ state: BeingState) -> some View {
         switch destination {
         case .life:
-            BeingLifeScreen(state: state, activity: store.activity, chrome: chrome)
+            BeingLifeScreen(
+                state: state,
+                activity: store.activity,
+                chrome: chrome,
+                onboarding: onboarding
+            )
         case .mind:
             BeingMindScreen(state: state, chrome: chrome)
         case .economy:
