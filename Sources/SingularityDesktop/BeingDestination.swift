@@ -31,11 +31,11 @@ enum BeingDestination: String, CaseIterable, Identifiable {
 
     var rationale: String {
         switch self {
-        case .life: "Verify whether the being is alive and what it is running on."
-        case .mind: "Inspect the persistent prompt, rules, learnings, and memories."
-        case .economy: "Verify solvency, earnings, costs, and token use."
-        case .children: "Inspect child beings and their separate state locations."
-        case .activity: "Read the owner-local activity journal and recent runtime actions."
+        case .life: "View the being's status and host."
+        case .mind: "View the prompt, rules, learnings, and memories."
+        case .economy: "View balances, costs, and token use."
+        case .children: "View child beings."
+        case .activity: "View recent activity and actions."
         }
     }
 }

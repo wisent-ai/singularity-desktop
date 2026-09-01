@@ -37,7 +37,6 @@ struct BeingLifeScreen: View {
 
             WisentSectionBox(
                 title: "Identity",
-                detail: "The durable identity loaded before every cycle.",
                 trailing: state.identity.ticker
             ) {
                 WisentPanel {
@@ -56,13 +55,12 @@ struct BeingLifeScreen: View {
 
             WisentSectionBox(
                 title: "Latest activity",
-                detail: "The newest owner-local journal entries.",
-                trailing: activity.isEmpty ? "runtime fallback" : "\(min(activity.count, 8)) of \(activity.count)"
+                trailing: activity.isEmpty ? "recent actions" : "\(min(activity.count, 8)) of \(activity.count)"
             ) {
                 if activity.isEmpty && state.recentActions.isEmpty {
                     WisentEmptyPanel(
                         title: "No activity recorded yet",
-                        detail: "The being has not persisted an activity entry or recent action.",
+                        detail: "No activity or recent actions yet.",
                         symbol: "waveform.path.ecg"
                     )
                 } else {
@@ -117,9 +115,7 @@ struct BeingMindScreen: View {
             ])
 
             WisentSectionBox(
-                title: "Persistent prompt",
-                detail: "The system prompt the next cycle receives.",
-                trailing: "state, not executable"
+                title: "Prompt"
             ) {
                 WisentPanel {
                     Text(state.mind.systemPrompt)
@@ -131,31 +127,28 @@ struct BeingMindScreen: View {
 
             TextListSection(
                 title: "Self-imposed rules",
-                detail: "Rules the being added to its own persistent mind.",
                 items: state.mind.rules,
                 emptyTitle: "No self-imposed rules",
-                emptyDetail: "The being has not added a persistent rule yet.",
+                emptyDetail: "No rules yet.",
                 symbol: "checklist"
             )
 
             TextListSection(
                 title: "Learnings",
-                detail: "Persistent conclusions carried into later cycles.",
                 items: state.mind.learnings,
                 emptyTitle: "No learnings recorded",
-                emptyDetail: "The being has not persisted a learning yet.",
+                emptyDetail: "No learnings yet.",
                 symbol: "lightbulb"
             )
 
             WisentSectionBox(
                 title: "Memories",
-                detail: "The newest memories retained across cycles.",
                 trailing: state.mind.memories.count.formatted()
             ) {
                 if state.mind.memories.isEmpty {
                     WisentEmptyPanel(
                         title: "No memories recorded",
-                        detail: "The persistent mind has no memory entries yet.",
+                        detail: "No memories yet.",
                         symbol: "memorychip"
                     )
                 } else {
@@ -205,7 +198,6 @@ struct BeingEconomyScreen: View {
 
             WisentSectionBox(
                 title: "Accounting",
-                detail: "Costs are debited exactly once; revenue is accepted only from trusted finance or trading tools.",
                 trailing: "cycle \(state.cycle.formatted())"
             ) {
                 WisentPanel {
@@ -241,13 +233,10 @@ struct BeingChildrenScreen: View {
             WisentSignalStrip(signals: [
                 WisentSignal("Children", value: state.mind.children.count.formatted(), tone: state.mind.children.isEmpty ? .neutral : .brand),
                 WisentSignal("Parent", value: state.identity.name, tone: .neutral),
-                WisentSignal("Executable", value: "Canonical runtime", tone: .success),
-                WisentSignal("State", value: "Owner-local", tone: .neutral),
             ])
 
             WisentSectionBox(
                 title: "Child beings",
-                detail: "Each child has separate owner-only state and runs the same canonical executable.",
                 trailing: state.mind.children.count.formatted()
             ) {
                 if state.mind.children.isEmpty {
@@ -279,7 +268,6 @@ struct BeingChildrenScreen: View {
                                             WisentStatusChip(text: child.status.capitalized, tone: beingStatusTone(child.status))
                                         }
                                         fieldGrid([
-                                            ("State directory", child.stateDir),
                                             ("Created", timestamp(child.createdAt)),
                                         ])
                                     }
@@ -310,21 +298,20 @@ struct BeingActivityScreen: View {
             refreshFailure(chrome.issue)
 
             WisentSignalStrip(signals: [
-                WisentSignal("Journal entries", value: activity.count.formatted(), tone: .brand),
+                WisentSignal("Events", value: activity.count.formatted(), tone: .brand),
                 WisentSignal("Recent actions", value: state.recentActions.count.formatted(), tone: .neutral),
                 WisentSignal("Latest event", value: activity.first.map { humanized($0.type) } ?? "None", tone: .neutral),
                 WisentSignal("Cycle", value: state.cycle.formatted(), tone: .neutral),
             ])
 
             WisentSectionBox(
-                title: "Activity journal",
-                detail: "Newest persisted events first. The desktop reads but never appends to activity.jsonl.",
+                title: "Activity",
                 trailing: activity.count > shownActivity.count ? "\(shownActivity.count) of \(activity.count)" : activity.count.formatted()
             ) {
                 if activity.isEmpty {
                     WisentEmptyPanel(
-                        title: "No journal entries",
-                        detail: "The activity journal is absent or empty. Runtime recent actions are shown below when available.",
+                        title: "No activity",
+                        detail: "No activity yet.",
                         symbol: "waveform.path.ecg"
                     )
                 } else {
@@ -345,8 +332,7 @@ struct BeingActivityScreen: View {
 
             if !state.recentActions.isEmpty {
                 WisentSectionBox(
-                    title: "Runtime recent actions",
-                    detail: "The compact action history persisted inside state.json.",
+                    title: "Recent actions",
                     trailing: state.recentActions.count.formatted()
                 ) {
                     WisentPanel(padding: 0) {
@@ -370,14 +356,13 @@ struct BeingActivityScreen: View {
 
 private struct TextListSection: View {
     let title: String
-    let detail: String
     let items: [String]
     let emptyTitle: String
     let emptyDetail: String
     let symbol: String
 
     var body: some View {
-        WisentSectionBox(title: title, detail: detail, trailing: items.count.formatted()) {
+        WisentSectionBox(title: title, trailing: items.count.formatted()) {
             if items.isEmpty {
                 WisentEmptyPanel(title: emptyTitle, detail: emptyDetail, symbol: symbol)
             } else {
@@ -442,10 +427,10 @@ private struct BeingDenseRow: View {
 @MainActor
 @ViewBuilder
 private func refreshFailure(_ issue: String?) -> some View {
-    if let issue {
+    if issue != nil {
         WisentErrorBanner(
             title: "The latest refresh failed",
-            detail: "\(issue) The last readable state remains on screen."
+            detail: "Previously loaded information remains visible."
         )
     }
 }

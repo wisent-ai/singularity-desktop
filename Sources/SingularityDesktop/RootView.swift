@@ -58,7 +58,7 @@ struct RootView: View {
             ) {
                 WisentLoadingPanel(
                     title: "Reading the being",
-                    detail: "Loading owner-local state.json and activity.jsonl from the selected Singularity state directory."
+                    detail: "Loading life, mind, children, and activity."
                 )
             }
         }
@@ -88,20 +88,20 @@ struct RootView: View {
         ) {
             if issue.hasPrefix("Missing regular file") {
                 WisentEmptyPanel(
-                    title: "No being state at this location",
-                    detail: issue,
+                    title: "No being found",
+                    detail: "Choose a folder containing a being.",
                     symbol: "folder.badge.questionmark",
-                    action: WisentAction("Choose state directory", symbol: "folder", kind: .primary) {
+                    action: WisentAction("Choose folder", symbol: "folder", kind: .primary) {
                         choosingDirectory = true
                     }
                 )
             } else {
                 WisentAlertPanel(
                     tone: .danger,
-                    title: "The being state could not be read",
-                    detail: issue,
+                    title: "The being could not be read",
+                    detail: "Choose another folder or try again.",
                     actions: [
-                        WisentAction("Choose state directory", symbol: "folder", kind: .secondary) {
+                        WisentAction("Choose folder", symbol: "folder", kind: .secondary) {
                             choosingDirectory = true
                         },
                     ]
@@ -110,8 +110,8 @@ struct RootView: View {
         }
     }
 
-    private var scope: String {
-        store.state?.identity.name ?? store.stateDirectory.lastPathComponent
+    private var scope: String? {
+        store.state?.identity.name
     }
 
     private var freshness: String? {
@@ -123,7 +123,7 @@ struct RootView: View {
             WisentAction("Refresh", symbol: "arrow.clockwise", kind: .secondary) {
                 Task { await store.refresh() }
             },
-            WisentAction("State directory", symbol: "folder", kind: .secondary) {
+            WisentAction("Folder", symbol: "folder", kind: .secondary) {
                 choosingDirectory = true
             },
         ]
@@ -166,8 +166,6 @@ private struct BeingSidebar: View {
                 }
                 .padding(.vertical, WisentDesign.Space.x4)
             }
-            Divider()
-            footer
         }
         .frame(width: WisentAppLayout.sidebarWidth)
         .background(WisentDesign.canvasMuted)
@@ -204,7 +202,7 @@ private struct BeingSidebar: View {
             .accessibilityElement(children: .combine)
 
             Menu {
-                Button("Choose state directory…", action: chooseDirectory)
+                Button("Choose folder…", action: chooseDirectory)
                 Button("Show in Finder", action: store.openDirectory)
             } label: {
                 VStack(alignment: .leading, spacing: WisentDesign.Space.x1) {
@@ -212,7 +210,7 @@ private struct BeingSidebar: View {
                         Circle()
                             .fill(statusTone.color)
                             .frame(width: 6, height: 6)
-                        Text(store.state?.identity.name ?? "No state loaded")
+                        Text(store.state?.identity.name ?? "No being loaded")
                             .font(WisentTypeScale.bodyStrong())
                             .foregroundStyle(WisentDesign.ink)
                             .lineLimit(1)
@@ -221,11 +219,10 @@ private struct BeingSidebar: View {
                             .font(.system(size: 8, weight: .semibold))
                             .foregroundStyle(WisentDesign.muted)
                     }
-                    Text(store.stateDirectory.path)
+                    Text(store.state.map { "\($0.identity.ticker) · \($0.status.capitalized)" } ?? "Choose a folder to begin")
                         .font(WisentTypeScale.identifierSmall())
                         .foregroundStyle(WisentDesign.secondary)
                         .lineLimit(1)
-                        .truncationMode(.middle)
                 }
                 .padding(WisentDesign.Space.x2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -240,7 +237,7 @@ private struct BeingSidebar: View {
             }
             .menuStyle(.borderlessButton)
             .menuIndicator(.hidden)
-            .accessibilityLabel("Singularity state directory")
+            .accessibilityLabel("Singularity folder")
         }
         .padding(WisentDesign.Space.x4)
     }
@@ -280,20 +277,6 @@ private struct BeingSidebar: View {
         .accessibilityHint(item.rationale)
     }
 
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: WisentDesign.Space.x1) {
-            Text("BOUNDARY")
-                .font(WisentTypeScale.eyebrow())
-                .tracking(0.8)
-                .foregroundStyle(WisentDesign.muted)
-            Text("Owner-local observation only. No cognition, tools, finance execution, or credentials run here.")
-                .font(WisentTypeScale.caption())
-                .foregroundStyle(WisentDesign.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(WisentDesign.Space.x4)
-    }
 
     private var statusTone: WisentTone {
         guard let state = store.state else { return .neutral }
