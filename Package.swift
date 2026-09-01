@@ -7,8 +7,8 @@ let package = Package(
     products: [.executable(name: "Singularity", targets: ["SingularityDesktop"])],
     dependencies: [
         .package(url: "https://github.com/wisent-ai/wisent-desktop-update.git", exact: "0.2.0"),
-        .package(url: "https://github.com/wisent-ai/wisent-components.git", exact: "0.7.0"),
-        .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", revision: "de393f399b86140c0bd0121695d2f489d52d3720"),
+        .package(url: "https://github.com/wisent-ai/wisent-components.git", exact: "0.7.1"),
+        .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", revision: "2ea0e92e1b48e6efb8d6668fc8f468fbe8f4fad4"),
         .package(url: "https://github.com/wisent-ai/wisent-errors.git", revision: "b01a0c99766b5c6378ecdbf3921108420ba058f1"),
     ],
     targets: [
