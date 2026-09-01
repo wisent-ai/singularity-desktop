@@ -8,8 +8,8 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/wisent-ai/wisent-desktop-update.git", exact: "0.2.0"),
         .package(url: "https://github.com/wisent-ai/wisent-components.git", exact: "0.8.1"),
-        .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", revision: "a8aed6d2f9e3e2ea22799ee0cfe8bae2358a70ad"),
-        .package(url: "https://github.com/wisent-ai/wisent-errors.git", revision: "b01a0c99766b5c6378ecdbf3921108420ba058f1"),
+        .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", exact: "0.2.3"),
+        .package(url: "https://github.com/wisent-ai/wisent-errors.git", exact: "1.0.0"),
     ],
     targets: [
         .executableTarget(
