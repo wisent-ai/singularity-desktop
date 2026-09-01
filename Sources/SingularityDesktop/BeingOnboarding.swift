@@ -217,11 +217,19 @@ final class BeingOnboardingController: ObservableObject {
     /// against the bundle, so a disagreement here is a refusal, not a
     /// fallback.
     private static func loadFallback() throws -> JourneyBundle {
-        guard let url = Bundle.module.url(forResource: Constants.resource, withExtension: "json")
-            ?? Bundle.main.url(forResource: Constants.resource, withExtension: "json")
-        else { throw JourneyClientError.invalid("bundled first-use journey is missing") }
+        // One loader for the whole fleet: JourneyResource resolves the
+        // packaged bundle and throws a named error saying which paths it
+        // tried, instead of SwiftPM's accessor trapping on a machine that
+        // never built this binary.
+        let definition = try String(
+            decoding: JourneyResource.definitionData(
+                resource: Constants.resource,
+                bundleName: "SingularityDesktop_SingularityDesktop.bundle"
+            ),
+            as: UTF8.self
+        )
         let bundle = try JourneyRouter.makeBundle(
-            canonicalDefinition: try String(contentsOf: url, encoding: .utf8),
+            canonicalDefinition: definition,
             journeyVersionId: Constants.fallbackVersionID
         )
         guard bundle.definition.productId == Constants.productID,

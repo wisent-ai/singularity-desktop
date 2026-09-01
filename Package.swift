@@ -10,7 +10,7 @@ let package = Package(
         .package(url: "https://github.com/wisent-ai/wisent-components.git", exact: "0.8.1"),
         .package(url: "https://github.com/wisent-ai/wisent-desktop-auth.git", exact: "0.3.2"),
         .package(url: "https://github.com/wisent-ai/wisent-errors.git", exact: "1.0.0"),
-        .package(url: "https://github.com/wisent-ai/echo.git", exact: "0.1.2"),
+        .package(url: "https://github.com/wisent-ai/echo.git", exact: "0.3.0"),
     ],
     targets: [
         .executableTarget(
