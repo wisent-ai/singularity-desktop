@@ -326,13 +326,19 @@ struct BeingOnboardingView: View {
                     }
                     HStack {
                         Spacer()
-                        Button(action: primaryAction) {
-                            Text(primaryLabel)
-                                .opacity(onboarding.isWorking ? 0.35 : 1)
-                        }
-                        .buttonStyle(WisentPrimaryButtonStyle())
+                        // The step's own verb stays put while the journey
+                        // advances: `isBusy` shimmers a bar where the word
+                        // sits, keeps the accessible name, and refuses the
+                        // second press this button used to take by dimming
+                        // its own label.
+                        WisentActionButton(
+                            action: WisentAction(
+                                primaryLabel,
+                                kind: .primary,
+                                isBusy: onboarding.isWorking
+                            ) { primaryAction() }
+                        )
                         .keyboardShortcut(.defaultAction)
-                        .disabled(onboarding.isWorking)
                     }
                 }
             }
@@ -408,7 +414,7 @@ struct BeingWalkthroughSection: View {
                             "Show it again",
                             symbol: "arrow.counterclockwise",
                             kind: .secondary,
-                            isEnabled: !isReplaying
+                            isBusy: isReplaying
                         ) { showAgain() }
                     )
                     if outcome != .idle {
