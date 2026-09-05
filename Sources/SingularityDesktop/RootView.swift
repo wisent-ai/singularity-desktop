@@ -7,6 +7,8 @@ struct RootView: View {
     @StateObject private var onboarding = BeingOnboardingController()
     @State private var destination: BeingDestination = .life
     @State private var choosingDirectory = false
+    @State private var choosingImport = false
+    @State private var importOutcome: WisentMutationOutcome = .idle
 
     var body: some View {
         HStack(spacing: 0) {
@@ -42,6 +44,23 @@ struct RootView: View {
         .fileImporter(isPresented: $choosingDirectory, allowedContentTypes: [.folder]) { result in
             if case let .success(url) = result { store.selectDirectory(url) }
         }
+        .fileImporter(isPresented: $choosingImport, allowedContentTypes: [.json]) { result in
+            guard case let .success(url) = result else { return }
+            importOutcome = .working("Validating with the being's state owner…")
+            Task {
+                do {
+                    let imported = try await store.importMind(from: url)
+                    importOutcome = imported.accepted
+                        ? .succeeded(imported.summary)
+                        : .failed(imported.summary)
+                    destination = .mind
+                } catch {
+                    importOutcome = .failed(
+                        (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+                    )
+                }
+            }
+        }
         .task { await store.monitor() }
         .task { await onboarding.start() }
         // The walkthrough sits over this window and nowhere else: one overlay
@@ -52,6 +71,9 @@ struct RootView: View {
                 BeingOnboardingView(
                     onboarding: onboarding,
                     beingLoaded: store.state != nil,
+                    importOutcome: importOutcome,
+                    importMind: { choosingImport = true },
+                    dismissImportOutcome: { importOutcome = .idle },
                     readBeing: readBeing
                 )
             }
@@ -160,6 +182,9 @@ struct RootView: View {
             WisentAction("Refresh", symbol: "arrow.clockwise", kind: .secondary) {
                 Task { await store.refresh() }
             },
+            WisentAction("Import", symbol: "square.and.arrow.down", kind: .secondary) {
+                choosingImport = true
+            },
             WisentAction("Folder", symbol: "folder", kind: .secondary) {
                 choosingDirectory = true
             },
@@ -171,6 +196,8 @@ struct RootView: View {
             scope: scope,
             freshness: freshness,
             actions: actions,
+            importOutcome: importOutcome,
+            dismissImportOutcome: { importOutcome = .idle },
             issue: store.issue
         )
     }

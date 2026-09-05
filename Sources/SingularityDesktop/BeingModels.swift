@@ -38,6 +38,13 @@ struct BeingMemory: Decodable, Identifiable, Sendable {
     let kind: String
     let text: String
     let createdAt: Date
+    let sources: [BeingMemorySource]?
+}
+
+struct BeingMemorySource: Decodable, Sendable {
+    let kind: String
+    let sourceId: String
+    let itemId: String
 }
 
 struct BeingChild: Decodable, Identifiable, Sendable {

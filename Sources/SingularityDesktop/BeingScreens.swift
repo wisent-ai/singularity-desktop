@@ -5,6 +5,8 @@ struct BeingScreenChrome {
     let scope: String?
     let freshness: String?
     let actions: [WisentAction]
+    let importOutcome: WisentMutationOutcome
+    let dismissImportOutcome: () -> Void
     let issue: String?
 }
 
@@ -111,6 +113,11 @@ struct BeingMindScreen: View {
             actions: chrome.actions
         ) {
             refreshFailure(chrome.issue)
+            if chrome.importOutcome != .idle {
+                WisentMutationBar(outcome: chrome.importOutcome) {
+                    chrome.dismissImportOutcome()
+                }
+            }
 
             WisentSignalStrip(signals: [
                 WisentSignal("Rules", value: state.mind.rules.count.formatted(), tone: .brand),
@@ -163,9 +170,10 @@ struct BeingMindScreen: View {
                                 BeingDenseRow(
                                     title: humanized(memory.kind),
                                     detail: memory.text,
-                                    meta: timestamp(memory.createdAt)
+                                    meta: memory.sources?.last.map {
+                                        "\($0.kind):\($0.sourceId) · \(timestamp(memory.createdAt))"
+                                    } ?? timestamp(memory.createdAt)
                                 )
-                                if memory.id != state.mind.memories.first?.id { Divider() }
                             }
                         }
                     }

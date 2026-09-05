@@ -16,12 +16,12 @@ final class BeingOnboardingController: ObservableObject {
     private enum Constants {
         static let productID = "singularity-desktop"
         static let journeyID = "first-use"
-        static let journeyVersion = "2026-09-01.1"
+        static let journeyVersion = "2026-09-04.1"
         static let firstSuccessFact = "being_state_observed"
-        static let evidenceRevision = "singularity-desktop-first-use-2026-09-01"
-        static let fallbackVersionID = UUID(uuidString: "3F5C1B90-1D64-4D2C-9E4B-27A3C0F5D611")!
+        static let evidenceRevision = "singularity-desktop-first-use-2026-09-04"
+        static let fallbackVersionID = UUID(uuidString: "2BC9E3AC-831F-4E96-A93A-E93756AE9F87")!
         static let resource = "singularity-desktop-first-use"
-        static let storageNamespace = "ai.wisent.singularity.onboarding.2026-09-01.1"
+        static let storageNamespace = "ai.wisent.singularity.onboarding.2026-09-04.1"
         static let deviceIDKey = "ai.wisent.singularity.onboarding.device-id"
     }
 
@@ -288,6 +288,9 @@ private struct BeingJourneyTransport: JourneyTransport {
 struct BeingOnboardingView: View {
     @ObservedObject var onboarding: BeingOnboardingController
     let beingLoaded: Bool
+    let importOutcome: WisentMutationOutcome
+    let importMind: () -> Void
+    let dismissImportOutcome: () -> Void
     let readBeing: () -> Void
 
     var body: some View {
@@ -317,6 +320,19 @@ struct BeingOnboardingView: View {
                         )
                         .font(WisentTypography.bodyMedium(13))
                         .foregroundStyle(beingLoaded ? WisentDesign.success : WisentDesign.secondary)
+                    }
+                    WisentActionButton(
+                        action: WisentAction(
+                            "Import existing mind…",
+                            symbol: "square.and.arrow.down",
+                            kind: .secondary,
+                            isEnabled: !importOutcome.isWorking
+                        ) { importMind() }
+                    )
+                    if importOutcome != .idle {
+                        WisentMutationBar(outcome: importOutcome) {
+                            dismissImportOutcome()
+                        }
                     }
                     if let errorMessage = onboarding.errorMessage {
                         Label(errorMessage, systemImage: "exclamationmark.triangle.fill")

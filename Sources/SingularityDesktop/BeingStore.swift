@@ -33,6 +33,14 @@ final class BeingStore: ObservableObject {
     func openDirectory() {
         NSWorkspace.shared.open(stateDirectory)
     }
+    func importMind(from documentURL: URL) async throws -> MindImportResult {
+        let result = try await MindImportClient.importDocument(
+            documentURL,
+            stateDirectory: stateDirectory
+        )
+        await refresh()
+        return result
+    }
 
     func monitor() async {
         while !Task.isCancelled {
