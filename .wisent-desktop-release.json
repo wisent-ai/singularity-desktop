@@ -4,7 +4,7 @@
   "product": "Singularity",
   "bundle_id": "ai.wisent.singularity.desktop",
   "bundle_path": ".build/Singularity.app",
-  "build_command": "SINGULARITY_INSTALL_AFTER_BUILD=no ./Scripts/build-app.sh",
+  "build_command": "SINGULARITY_INSTALL_AFTER_BUILD=no ./release/bundle/build-app.sh",
   "archive_name": "Singularity-{version}.zip",
   "feed_url": "https://github.com/wisent-ai/singularity-desktop/releases/latest/download/appcast.xml",
   "minimum_system_version": "14.0"

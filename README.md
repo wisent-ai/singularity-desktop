@@ -31,7 +31,7 @@ policy, and enabled tools are never overwritten or activated.
 swift build
 ```
 
-`Scripts/build-app.sh` builds the installable signed application. It requires
+`release/bundle/build-app.sh` builds the installable signed application. It requires
 an Apple signing identity and signs nested helpers before the outer bundle,
 without recursively replacing their identifiers. The build verifies that
 `WisentIdentityKeychainHelper` still has the shared
