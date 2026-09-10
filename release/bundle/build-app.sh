@@ -74,7 +74,11 @@ fi
 # packaged app without it would fall back to an isolated bundle-scoped Keychain
 # item and ask for another login.
 IDENTITY_HELPER="$CONTENTS/Helpers/WisentIdentityKeychainHelper"
-"$ROOT/.build/checkouts/wisent-desktop-auth/scripts/build-keychain-helper.sh" "$IDENTITY_HELPER"
+IDENTITY_BUILD_DIR="$ROOT/.build/identity-helper"
+swift build --package-path "$ROOT/.build/checkouts/wisent-desktop-auth" \
+    --configuration release --product wisent-identity-keychain-helper --scratch-path "$IDENTITY_BUILD_DIR"
+mkdir -p "$(dirname "$IDENTITY_HELPER")"
+install -m 0755 "$IDENTITY_BUILD_DIR/release/wisent-identity-keychain-helper" "$IDENTITY_HELPER"
 
 IDENTITY=${WISENT_CODESIGN_IDENTITY:-}
 if [ -z "$IDENTITY" ]; then
