@@ -90,8 +90,9 @@ fi
 codesign --force --options runtime --timestamp=none --sign "$IDENTITY" \
   --identifier ai.wisent.identity.keychain-helper "$IDENTITY_HELPER"
 codesign --force --options runtime --timestamp=none --sign "$IDENTITY" "$MACOS/Singularity"
-codesign --force --deep --options runtime --timestamp=none --sign "$IDENTITY" "$APP"
+codesign --force --options runtime --timestamp=none --sign "$IDENTITY" "$APP"
 codesign --verify --strict --deep "$APP"
+codesign --verify --strict --test-requirement '=identifier "ai.wisent.identity.keychain-helper"' "$IDENTITY_HELPER"
 echo "Built $APP"
 
 [ "${SINGULARITY_INSTALL_AFTER_BUILD:-yes}" = no ] && exit 0

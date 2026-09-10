@@ -31,4 +31,11 @@ policy, and enabled tools are never overwritten or activated.
 swift build
 ```
 
+`Scripts/build-app.sh` builds the installable signed application. It requires
+an Apple signing identity and signs nested helpers before the outer bundle,
+without recursively replacing their identifiers. The build verifies that
+`WisentIdentityKeychainHelper` still has the shared
+`ai.wisent.identity.keychain-helper` identity after the app is sealed, so
+updates do not turn the common Keychain client into an unrelated executable.
+
 The canonical runtime remains [wisent-ai/singularity](https://github.com/wisent-ai/singularity). License: MIT.
