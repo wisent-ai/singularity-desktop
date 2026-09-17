@@ -13,7 +13,7 @@ final class BeingStore: ObservableObject {
     private let defaults: UserDefaults
     private let directoryKey = "singularityDesktop.stateDirectory"
     /// A state or journal file larger than this is not Singularity's; the newest journal lines up to this many are kept.
-    nonisolated private static let stateFileLimit = 16 * 1024 * 1024
+    nonisolated private static let stateFileLimit: UInt64 = 16 * 1024 * 1024
     nonisolated private static let retainedActivityLines = 2_000
 
     init(defaults: UserDefaults = .standard) {
