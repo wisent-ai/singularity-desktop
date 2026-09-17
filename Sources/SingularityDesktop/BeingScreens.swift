@@ -15,6 +15,8 @@ struct BeingLifeScreen: View {
     let activity: [ActivityLine]
     let chrome: BeingScreenChrome
     @ObservedObject var onboarding: BeingOnboardingController
+    /// The life screen shows this many recent rows; the activity screen shows the rest.
+    static let recentRowLimit = 8
 
     var body: some View {
         WisentScreen(
@@ -70,23 +72,23 @@ struct BeingLifeScreen: View {
                     WisentPanel(padding: 0) {
                         VStack(spacing: 0) {
                             if !activity.isEmpty {
-                                ForEach(activity.prefix(8)) { item in
+                                ForEach(activity.prefix(Self.recentRowLimit)) { item in
                                     BeingDenseRow(
                                         title: humanized(item.type),
                                         detail: item.summary.isEmpty ? "No additional fields" : item.summary,
                                         meta: item.timestamp.map(timestamp)
                                     )
-                                    if item.id != activity.prefix(8).last?.id { Divider() }
+                                    if item.id != activity.prefix(Self.recentRowLimit).last?.id { Divider() }
                                 }
                             } else {
-                                ForEach(state.recentActions.prefix(8)) { action in
+                                ForEach(state.recentActions.prefix(Self.recentRowLimit)) { action in
                                     BeingDenseRow(
                                         title: action.tool,
                                         detail: "cycle \(action.cycle.formatted()) · \(action.status)",
                                         meta: timestamp(action.at),
                                         tone: beingStatusTone(action.status)
                                     )
-                                    if action.id != state.recentActions.prefix(8).last?.id { Divider() }
+                                    if action.id != state.recentActions.prefix(Self.recentRowLimit).last?.id { Divider() }
                                 }
                             }
                         }
@@ -299,7 +301,10 @@ struct BeingActivityScreen: View {
     let activity: [ActivityLine]
     let chrome: BeingScreenChrome
 
-    private var shownActivity: ArraySlice<ActivityLine> { activity.prefix(250) }
+    /// The activity screen shows the newest lines up to this many; the journal itself keeps more.
+    static let shownActivityLimit = 250
+
+    private var shownActivity: ArraySlice<ActivityLine> { activity.prefix(Self.shownActivityLimit) }
 
     var body: some View {
         WisentScreen(
