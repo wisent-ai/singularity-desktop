@@ -6,6 +6,7 @@ enum BeingDestination: String, CaseIterable, Identifiable {
     case economy
     case children
     case activity
+    case ecosystem
 
     var id: String { rawValue }
 
@@ -16,6 +17,7 @@ enum BeingDestination: String, CaseIterable, Identifiable {
         case .economy: "Economy"
         case .children: "Children"
         case .activity: "Activity"
+        case .ecosystem: "Ecosystem"
         }
     }
 
@@ -26,6 +28,7 @@ enum BeingDestination: String, CaseIterable, Identifiable {
         case .economy: "chart.line.uptrend.xyaxis"
         case .children: "person.2"
         case .activity: "waveform.path.ecg"
+        case .ecosystem: "square.stack.3d.up"
         }
     }
 
@@ -36,6 +39,7 @@ enum BeingDestination: String, CaseIterable, Identifiable {
         case .economy: "View balances, costs, and token use."
         case .children: "View child beings."
         case .activity: "View recent activity and actions."
+        case .ecosystem: "Review opportunities, delivery evidence, outcomes, and delegated spending."
         }
     }
 }
@@ -49,7 +53,7 @@ enum BeingDestinationGroup: String, CaseIterable, Identifiable {
 
     var destinations: [BeingDestination] {
         switch self {
-        case .existence: [.life, .economy]
+        case .existence: [.ecosystem, .life, .economy]
         case .continuity: [.mind, .children]
         case .history: [.activity]
         }
