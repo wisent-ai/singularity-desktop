@@ -81,10 +81,7 @@ struct RootView: View {
                 // after completion, stay visible when the card is down.
                 VStack {
                     Spacer()
-                    Label(failure, systemImage: "exclamationmark.triangle.fill")
-                        .font(WisentTypography.bodyMedium(13))
-                        .foregroundStyle(WisentDesign.danger)
-                        .fixedSize(horizontal: false, vertical: true)
+                    WisentAlertPanel(tone: .warning, title: "First-use guide", detail: failure)
                         .padding(WisentDesign.Space.x4)
                 }
             }
