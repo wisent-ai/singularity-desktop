@@ -76,6 +76,17 @@ struct RootView: View {
                     dismissImportOutcome: { importOutcome = .idle },
                     readBeing: readBeing
                 )
+            } else if let failure = onboarding.errorMessage {
+                // A guide that could not load, or events that were not sent
+                // after completion, stay visible when the card is down.
+                VStack {
+                    Spacer()
+                    Label(failure, systemImage: "exclamationmark.triangle.fill")
+                        .font(WisentTypography.bodyMedium(13))
+                        .foregroundStyle(WisentDesign.danger)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(WisentDesign.Space.x4)
+                }
             }
         }
         // The last step is finished by a being, not by the button that closed

@@ -78,7 +78,11 @@ final class BeingOnboardingController: ObservableObject {
             screen = await client.currentScreen
             if progress.status == .completed {
                 presentation = .completed
-                try? await client.flush()
+                do {
+                    try await client.flush()
+                } catch {
+                    errorMessage = "Singularity couldn’t send its first-use events: \(Self.replayFailure(error))"
+                }
             } else {
                 presentation = .presenting
                 try await client.expose(evidenceRevision: Constants.evidenceRevision)
@@ -86,6 +90,7 @@ final class BeingOnboardingController: ObservableObject {
         } catch {
             presentation = .unavailable
             screen = nil
+            errorMessage = "The first-use guide could not load: \(Self.replayFailure(error))"
         }
     }
 
@@ -102,7 +107,7 @@ final class BeingOnboardingController: ObservableObject {
             screen = await client.currentScreen
             try await client.expose(evidenceRevision: Constants.evidenceRevision)
         } catch {
-            errorMessage = "This step could not be saved on this Mac. Try again."
+            errorMessage = "This step could not be saved on this Mac: \(Self.replayFailure(error))"
         }
     }
 
@@ -119,18 +124,29 @@ final class BeingOnboardingController: ObservableObject {
     /// fact is the store's decoded `state.json`, not a click.
     func beingStateObserved() async {
         guard presentation == .awaitingBeing, let client else { return }
-        let completed = try? await client.complete(
-            evidence: [Constants.firstSuccessFact: .boolean(true)],
-            evidenceRevision: Constants.evidenceRevision
-        )
-        guard completed == true else {
+        let completed: Bool
+        do {
+            completed = try await client.complete(
+                evidence: [Constants.firstSuccessFact: .boolean(true)],
+                evidenceRevision: Constants.evidenceRevision
+            )
+        } catch {
             presentation = .presenting
-            errorMessage = "The being was read, but finishing the guide could not be saved."
+            errorMessage = "The being was read, but finishing the guide could not be saved: \(Self.replayFailure(error))"
+            return
+        }
+        guard completed else {
+            presentation = .presenting
+            errorMessage = "The being was read, but the guide did not accept it as first use yet."
             return
         }
         presentation = .completed
         screen = nil
-        try? await client.flush()
+        do {
+            try await client.flush()
+        } catch {
+            errorMessage = "Singularity recorded first use but couldn’t send its events yet: \(Self.replayFailure(error))"
+        }
     }
 
     /// Settings asking for the walkthrough a second time.
@@ -161,7 +177,11 @@ final class BeingOnboardingController: ObservableObject {
             errorMessage = nil
             presentation = .presenting
             try await client.expose(evidenceRevision: Constants.evidenceRevision)
-            try? await client.flush()
+            do {
+                try await client.flush()
+            } catch {
+                return .succeeded("Started. The walkthrough is in front of this window; its events were not sent yet: \(Self.replayFailure(error))")
+            }
             return .succeeded("Started. The walkthrough is in front of this window.")
         } catch {
             return .failed(Self.replayFailure(error))
