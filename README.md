@@ -8,8 +8,8 @@ duplicating cognition, import parsing, tools, finance execution, or credentials.
 The window shows identity, life status, cycle, model, balance, earnings, costs,
 persistent prompt, self-imposed rules, learnings, memories, import source
 attribution, children, and the activity journal. Choose the runtime state
-directory in the toolbar or set `SINGULARITY_STATE_DIR`; the default is
-`~/.singularity`.
+directory in the toolbar or set `SINGULARITY_STATE_DIR`; no directory is
+assumed, and the app says so until one is chosen.
 
 ## Import an existing mind
 

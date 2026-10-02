@@ -8,7 +8,9 @@ final class BeingStore: ObservableObject {
     @Published private(set) var activity: [ActivityLine] = []
     @Published private(set) var issue: String?
     @Published private(set) var refreshedAt: Date?
-    @Published private(set) var stateDirectory: URL
+    /// The being read; nothing is assumed until the operator chooses a
+    /// directory or `SINGULARITY_STATE_DIR` names one.
+    @Published private(set) var stateDirectory: URL?
 
     private let defaults: UserDefaults
     private let directoryKey = "singularityDesktop.stateDirectory"
@@ -23,20 +25,28 @@ final class BeingStore: ObservableObject {
         } else if let configured = ProcessInfo.processInfo.environment["SINGULARITY_STATE_DIR"], !configured.isEmpty {
             stateDirectory = URL(fileURLWithPath: configured, isDirectory: true)
         } else {
-            stateDirectory = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".singularity", isDirectory: true)
+            stateDirectory = nil
+            issue = Self.noDirectoryIssue
         }
     }
 
+    static let noDirectoryIssue = "No state directory is selected. Choose the folder the runtime writes to, or start the app with SINGULARITY_STATE_DIR."
+
     func selectDirectory(_ url: URL) {
-        stateDirectory = url.standardizedFileURL
-        defaults.set(stateDirectory.path, forKey: directoryKey)
+        let selected = url.standardizedFileURL
+        stateDirectory = selected
+        defaults.set(selected.path, forKey: directoryKey)
         Task { await refresh() }
     }
 
     func openDirectory() {
+        guard let stateDirectory else { return }
         NSWorkspace.shared.open(stateDirectory)
     }
     func importMind(from documentURL: URL) async throws -> MindImportResult {
+        guard let stateDirectory else {
+            throw StoreFailure(Self.noDirectoryIssue)
+        }
         let result = try await MindImportClient.importDocument(
             documentURL,
             stateDirectory: stateDirectory
@@ -53,6 +63,10 @@ final class BeingStore: ObservableObject {
     }
 
     func refresh() async {
+        guard let stateDirectory else {
+            issue = Self.noDirectoryIssue
+            return
+        }
         do {
             let loadedState = try Self.loadState(stateDirectory.appendingPathComponent("state.json"))
             let loadedActivity = try Self.loadActivity(stateDirectory.appendingPathComponent("activity.jsonl"))

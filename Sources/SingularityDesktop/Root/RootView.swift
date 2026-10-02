@@ -108,8 +108,8 @@ struct RootView: View {
 
     @ViewBuilder
     private var detail: some View {
-        if destination == .ecosystem {
-            EcosystemScreen(directory: store.stateDirectory)
+        if destination == .ecosystem, let directory = store.stateDirectory {
+            EcosystemScreen(directory: directory)
         } else if let state = store.state {
             screen(state)
         } else if let issue = store.issue {
@@ -144,7 +144,11 @@ struct RootView: View {
         case .activity:
             BeingActivityScreen(state: state, activity: store.activity, chrome: chrome)
         case .ecosystem:
-            EcosystemScreen(directory: store.stateDirectory)
+            if let directory = store.stateDirectory {
+                EcosystemScreen(directory: directory)
+            } else {
+                unavailable(BeingStore.noDirectoryIssue)
+            }
         }
     }
 
