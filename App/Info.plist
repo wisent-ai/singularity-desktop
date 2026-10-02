@@ -44,7 +44,7 @@
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
-	<string>https://charless-mac-mini.tail6443b3.ts.net/api/release/appcast?product=singularity-desktop</string>
+	<string></string>
 	<key>SUPublicEDKey</key>
 	<string>VTPfm2MTF7ZhJSMJsh+gwtEmCPHLA9oTQMQJMahsClA=</string>
 	<key>SUScheduledCheckInterval</key>
