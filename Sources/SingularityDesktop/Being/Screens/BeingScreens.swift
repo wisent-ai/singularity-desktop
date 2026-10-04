@@ -15,8 +15,6 @@ struct BeingLifeScreen: View {
     let activity: [ActivityLine]
     let chrome: BeingScreenChrome
     @ObservedObject var onboarding: BeingOnboardingController
-    /// The life screen shows this many recent rows; the activity screen shows the rest.
-    static let recentRowLimit = 8
 
     var body: some View {
         WisentScreen(
@@ -60,7 +58,7 @@ struct BeingLifeScreen: View {
 
             WisentSectionBox(
                 title: "Latest activity",
-                trailing: activity.isEmpty ? "recent actions" : "\(min(activity.count, 8)) of \(activity.count)"
+                trailing: activity.isEmpty ? "recent actions" : "\(activity.count) recorded"
             ) {
                 if activity.isEmpty && state.recentActions.isEmpty {
                     WisentEmptyPanel(
@@ -72,23 +70,23 @@ struct BeingLifeScreen: View {
                     WisentPanel(padding: 0) {
                         VStack(spacing: 0) {
                             if !activity.isEmpty {
-                                ForEach(activity.prefix(Self.recentRowLimit)) { item in
+                                ForEach(activity) { item in
                                     BeingDenseRow(
                                         title: humanized(item.type),
                                         detail: item.summary.isEmpty ? "No additional fields" : item.summary,
                                         meta: item.timestamp.map(timestamp)
                                     )
-                                    if item.id != activity.prefix(Self.recentRowLimit).last?.id { Divider() }
+                                    if item.id != activity.last?.id { Divider() }
                                 }
                             } else {
-                                ForEach(state.recentActions.prefix(Self.recentRowLimit)) { action in
+                                ForEach(state.recentActions) { action in
                                     BeingDenseRow(
                                         title: action.tool,
                                         detail: "cycle \(action.cycle.formatted()) · \(action.status)",
                                         meta: timestamp(action.at),
                                         tone: beingStatusTone(action.status)
                                     )
-                                    if action.id != state.recentActions.prefix(Self.recentRowLimit).last?.id { Divider() }
+                                    if action.id != state.recentActions.last?.id { Divider() }
                                 }
                             }
                         }
