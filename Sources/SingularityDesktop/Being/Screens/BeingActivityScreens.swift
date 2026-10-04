@@ -76,11 +76,6 @@ struct BeingActivityScreen: View {
     let activity: [ActivityLine]
     let chrome: BeingScreenChrome
 
-    /// The activity screen shows the newest lines up to this many; the journal itself keeps more.
-    static let shownActivityLimit = 250
-
-    private var shownActivity: ArraySlice<ActivityLine> { activity.prefix(Self.shownActivityLimit) }
-
     var body: some View {
         WisentScreen(
             title: BeingDestination.activity.title,
@@ -99,7 +94,7 @@ struct BeingActivityScreen: View {
 
             WisentSectionBox(
                 title: "Activity",
-                trailing: activity.count > shownActivity.count ? "\(shownActivity.count) of \(activity.count)" : activity.count.formatted()
+                trailing: activity.count.formatted()
             ) {
                 if activity.isEmpty {
                     WisentEmptyPanel(
@@ -110,13 +105,13 @@ struct BeingActivityScreen: View {
                 } else {
                     WisentPanel(padding: 0) {
                         LazyVStack(spacing: 0) {
-                            ForEach(shownActivity) { item in
+                            ForEach(activity) { item in
                                 BeingDenseRow(
                                     title: humanized(item.type),
                                     detail: item.summary.isEmpty ? "No additional fields" : item.summary,
                                     meta: item.timestamp.map(timestamp)
                                 )
-                                if item.id != shownActivity.last?.id { Divider() }
+                                if item.id != activity.last?.id { Divider() }
                             }
                         }
                     }

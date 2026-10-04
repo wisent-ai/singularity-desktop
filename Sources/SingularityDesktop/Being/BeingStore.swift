@@ -14,9 +14,8 @@ final class BeingStore: ObservableObject {
 
     private let defaults: UserDefaults
     private let directoryKey = "singularityDesktop.stateDirectory"
-    /// A state or journal file larger than this is not Singularity's; the newest journal lines up to this many are kept.
+    /// A state or journal file larger than this is not Singularity's; every journal line is kept.
     nonisolated private static let stateFileLimit: UInt64 = 16 * 1024 * 1024
-    nonisolated private static let retainedActivityLines = 2_000
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -112,7 +111,7 @@ final class BeingStore: ObservableObject {
         guard let text = String(data: data, encoding: .utf8) else {
             throw StoreFailure("Activity journal is not UTF-8")
         }
-        return text.split(separator: "\n").suffix(Self.retainedActivityLines).enumerated().compactMap { index, line in
+        return text.split(separator: "\n").enumerated().compactMap { index, line in
             guard let data = line.data(using: .utf8),
                   let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let type = value["type"] as? String else { return nil }
