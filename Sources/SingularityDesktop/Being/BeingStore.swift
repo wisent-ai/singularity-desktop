@@ -14,8 +14,6 @@ final class BeingStore: ObservableObject {
 
     private let defaults: UserDefaults
     private let directoryKey = "singularityDesktop.stateDirectory"
-    /// A state or journal file larger than this is not Singularity's; every journal line is kept.
-    nonisolated private static let stateFileLimit: UInt64 = 16 * 1024 * 1024
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
@@ -94,7 +92,7 @@ final class BeingStore: ObservableObject {
     }
 
     nonisolated private static func loadState(_ url: URL) throws -> BeingState {
-        let data = try boundedRegularFile(url, limit: Self.stateFileLimit)
+        let data = try regularFile(url)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         decoder.dateDecodingStrategy = .custom(decodeDate)
@@ -107,7 +105,7 @@ final class BeingStore: ObservableObject {
 
     nonisolated private static func loadActivity(_ url: URL) throws -> [ActivityLine] {
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        let data = try boundedRegularFile(url, limit: Self.stateFileLimit)
+        let data = try regularFile(url)
         guard let text = String(data: data, encoding: .utf8) else {
             throw StoreFailure("Activity journal is not UTF-8")
         }
@@ -122,13 +120,10 @@ final class BeingStore: ObservableObject {
         }.reversed()
     }
 
-    nonisolated private static func boundedRegularFile(_ url: URL, limit: UInt64) throws -> Data {
-        let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+    nonisolated private static func regularFile(_ url: URL) throws -> Data {
+        let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
         guard values.isRegularFile == true, values.isSymbolicLink != true else {
             throw StoreFailure("Missing regular file: \(url.lastPathComponent)")
-        }
-        guard UInt64(values.fileSize ?? 0) <= limit else {
-            throw StoreFailure("\(url.lastPathComponent) exceeds the display limit")
         }
         return try Data(contentsOf: url, options: [.mappedIfSafe])
     }

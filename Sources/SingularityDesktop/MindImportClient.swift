@@ -50,18 +50,13 @@ private struct MindImportFailure: LocalizedError {
 }
 
 enum MindImportClient {
-    private static let maximumDocumentBytes = 16 * 1024 * 1024
-    private static let maximumResponseBytes = 1024 * 1024
-
     static func importDocument(_ documentURL: URL, stateDirectory: URL) async throws -> MindImportResult {
         let encoded = try await Task.detached(priority: .userInitiated) {
             try encodeDocument(documentURL)
         }.value
         try Task.checkCancellation()
         let socketURL = stateDirectory.appendingPathComponent("state-import.sock")
-        let response = try await OwnerConnection.exchange(
-            encoded, socketPath: socketURL.path, maximumResponseBytes: maximumResponseBytes
-        )
+        let response = try await OwnerConnection.exchange(encoded, socketPath: socketURL.path)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         let envelope = try decoder.decode(MindImportWireResponse.self, from: response)
@@ -84,13 +79,7 @@ enum MindImportClient {
         guard values.isRegularFile == true, values.isSymbolicLink != true else {
             throw MindImportFailure(message: "The import must be a regular JSON file, not a folder or symbolic link.")
         }
-        guard (values.fileSize ?? 0) <= maximumDocumentBytes else {
-            throw MindImportFailure(message: "The import exceeds the 16 MiB limit.")
-        }
         let document = try Data(contentsOf: documentURL, options: [.mappedIfSafe])
-        guard document.count <= maximumDocumentBytes else {
-            throw MindImportFailure(message: "The import exceeds the 16 MiB limit.")
-        }
         let request = MindImportWireRequest(documentBase64: document.base64EncodedString())
         return try JSONEncoder().encode(request)
     }

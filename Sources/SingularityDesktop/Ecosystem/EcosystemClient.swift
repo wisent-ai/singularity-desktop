@@ -101,9 +101,7 @@ private struct EcosystemRequest: Encodable {
         var kind: String? = nil
         var initiativeId: String? = nil
         var before: Int64? = nil
-        var limit: Int? = nil
         var offset: UInt64? = nil
-        var bytes: Int? = nil
         var revision: String? = nil
     }
 }
@@ -121,23 +119,23 @@ enum EcosystemClient {
     }
 
     static func opportunities(_ directory: URL, before: Int64? = nil) async throws -> EcosystemItems<EcosystemOpportunity> {
-        try await request(directory, method: "opportunities", params: .init(before: before, limit: 50))
+        try await request(directory, method: "opportunities", params: .init(before: before))
     }
 
     static func initiatives(_ directory: URL, before: Int64? = nil) async throws -> EcosystemItems<EcosystemInitiative> {
-        try await request(directory, method: "initiatives", params: .init(before: before, limit: 50))
+        try await request(directory, method: "initiatives", params: .init(before: before))
     }
 
     static func records(_ directory: URL, kind: String?, initiativeId: String?, before: Int64? = nil) async throws -> EcosystemItems<EcosystemRecordSummary> {
-        try await request(directory, method: "records", params: .init(kind: kind, initiativeId: initiativeId, before: before, limit: 50))
+        try await request(directory, method: "records", params: .init(kind: kind, initiativeId: initiativeId, before: before))
     }
 
     static func record(_ directory: URL, kind: String, id: String, offset: UInt64 = 0, revision: String? = nil) async throws -> EcosystemRecordChunk {
         let value: EcosystemRecordChunk = try await request(directory, method: "record",
-            params: .init(id: id, kind: kind, offset: offset, bytes: 65_536, revision: revision))
+            params: .init(id: id, kind: kind, offset: offset, revision: revision))
         let (end, overflow) = offset.addingReportingOverflow(UInt64(value.text.utf8.count))
         guard value.kind == kind, value.id == id, value.offset == offset, !overflow,
-              value.text.utf8.count <= 65_536, end <= value.totalBytes,
+              end <= value.totalBytes,
               value.nextOffset == (end < value.totalBytes ? end : nil),
               end > offset || end == value.totalBytes,
               value.contentSha256.utf8.count == 64,
@@ -180,12 +178,8 @@ enum EcosystemClient {
         encoder.keyEncodingStrategy = .convertToSnakeCase
         var body = try encoder.encode(EcosystemRequest(method: method, params: params))
         body.append(OwnerProtocol.newline)
-        guard body.count <= OwnerProtocol.maximumEcosystemRequestBytes else {
-            throw OwnerConnectionFailure(message: "The ecosystem request exceeds \(OwnerProtocol.maximumEcosystemRequestBytes) bytes.")
-        }
         let response = try await OwnerConnection.exchange(body,
-            socketPath: directory.appendingPathComponent("ecosystem.sock").path,
-            maximumResponseBytes: OwnerProtocol.maximumEcosystemResponseBytes)
+            socketPath: directory.appendingPathComponent("ecosystem.sock").path)
         guard response.last == OwnerProtocol.newline else {
             throw OwnerConnectionFailure(message: "The owner returned an incomplete ecosystem response.")
         }

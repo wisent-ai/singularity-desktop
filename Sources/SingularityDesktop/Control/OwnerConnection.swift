@@ -6,8 +6,8 @@ struct OwnerConnectionFailure: LocalizedError {
 }
 
 enum OwnerConnection {
-    static func exchange(_ request: Data, socketPath: String, maximumResponseBytes: Int) async throws -> Data {
-        let exchange = OwnerSocketExchange(request: request, path: socketPath, maximumResponseBytes: maximumResponseBytes)
+    static func exchange(_ request: Data, socketPath: String) async throws -> Data {
+        let exchange = OwnerSocketExchange(request: request, path: socketPath)
         return try await withTaskCancellationHandler {
             try await withCheckedThrowingContinuation { exchange.start($0) }
         } onCancel: {

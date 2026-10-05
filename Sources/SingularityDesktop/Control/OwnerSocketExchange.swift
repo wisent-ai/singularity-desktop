@@ -8,7 +8,6 @@ final class OwnerSocketExchange: @unchecked Sendable {
     private let cleanup = DispatchGroup()
     private let request: Data
     private let path: String
-    private let maximumResponseBytes: Int
     private var descriptor: Int32?
     private var writer: (any DispatchSourceWrite)?
     private var reader: (any DispatchSourceRead)?
@@ -20,10 +19,9 @@ final class OwnerSocketExchange: @unchecked Sendable {
     private var response = Data()
     private var buffer: [UInt8] = []
 
-    init(request: Data, path: String, maximumResponseBytes: Int) {
+    init(request: Data, path: String) {
         self.request = request
         self.path = path
-        self.maximumResponseBytes = maximumResponseBytes
     }
 
     func start(_ continuation: CheckedContinuation<Data, Error>) {
@@ -138,10 +136,6 @@ final class OwnerSocketExchange: @unchecked Sendable {
             if count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK) { return }
             guard count >= 0 else { finish(.failure(failure("read response"))); return }
             if count == 0 { finish(.success(response)); return }
-            guard response.count + count <= maximumResponseBytes else {
-                finish(.failure(OwnerConnectionFailure(message: "The state owner's response exceeds \(maximumResponseBytes) bytes: \(path)")))
-                return
-            }
             response.append(contentsOf: buffer.prefix(count))
         }
     }
