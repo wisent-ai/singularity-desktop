@@ -12,16 +12,21 @@ struct BeingJourneyTransport: JourneyTransport {
     func readBundle(productId: String, journeyId: String) async throws -> JourneyBundle {
         let bundle = try await upstream.readBundle(productId: productId, journeyId: journeyId)
         guard bundle.definition.journeyVersion == requiredJourneyVersion,
-              bundle.definition.firstSuccessFact == requiredFirstSuccessFact
+            bundle.definition.firstSuccessFact == requiredFirstSuccessFact
         else { throw JourneyClientError.invalid("central journey identity") }
         return bundle
     }
 
-    func readState(productId: String, attemptId: UUID, subjectHash: String) async throws -> JSONValue? {
-        try await upstream.readState(productId: productId, attemptId: attemptId, subjectHash: subjectHash)
+    func readState(productId: String, attemptId: UUID, subjectHash: String) async throws
+        -> JSONValue?
+    {
+        try await upstream.readState(
+            productId: productId, attemptId: attemptId, subjectHash: subjectHash)
     }
 
-    func assignExperiment(request: JourneyAssignmentRequest) async throws -> JourneyAssignmentResponse {
+    func assignExperiment(request: JourneyAssignmentRequest) async throws
+        -> JourneyAssignmentResponse
+    {
         try await upstream.assignExperiment(request: request)
     }
 

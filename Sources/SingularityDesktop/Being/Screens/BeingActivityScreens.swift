@@ -21,7 +21,9 @@ struct BeingChildrenScreen: View {
             refreshFailure(chrome.issue)
 
             WisentSignalStrip(signals: [
-                WisentSignal("Children", value: state.mind.children.count.formatted(), tone: state.mind.children.isEmpty ? .neutral : .brand),
+                WisentSignal(
+                    "Children", value: state.mind.children.count.formatted(),
+                    tone: state.mind.children.isEmpty ? .neutral : .brand),
                 WisentSignal("Parent", value: state.identity.name, tone: .neutral),
             ])
 
@@ -46,7 +48,8 @@ struct BeingChildrenScreen: View {
                                         .frame(width: 40, height: 40)
                                         .background(
                                             beingStatusTone(child.status).softColor,
-                                            in: RoundedRectangle(cornerRadius: WisentDesign.Radius.small)
+                                            in: RoundedRectangle(
+                                                cornerRadius: WisentDesign.Radius.small)
                                         )
                                     VStack(alignment: .leading, spacing: WisentDesign.Space.x3) {
                                         HStack(alignment: .firstTextBaseline) {
@@ -55,10 +58,12 @@ struct BeingChildrenScreen: View {
                                                 .foregroundStyle(WisentDesign.ink)
                                             WisentStatusChip(text: child.ticker, tone: .brand)
                                             Spacer(minLength: 0)
-                                            WisentStatusChip(text: child.status.capitalized, tone: beingStatusTone(child.status))
+                                            WisentStatusChip(
+                                                text: child.status.capitalized,
+                                                tone: beingStatusTone(child.status))
                                         }
                                         fieldGrid([
-                                            ("Created", timestamp(child.createdAt)),
+                                            ("Created", timestamp(child.createdAt))
                                         ])
                                     }
                                 }
@@ -87,8 +92,11 @@ struct BeingActivityScreen: View {
 
             WisentSignalStrip(signals: [
                 WisentSignal("Events", value: activity.count.formatted(), tone: .brand),
-                WisentSignal("Recent actions", value: state.recentActions.count.formatted(), tone: .neutral),
-                WisentSignal("Latest event", value: activity.first.map { humanized($0.type) } ?? "None", tone: .neutral),
+                WisentSignal(
+                    "Recent actions", value: state.recentActions.count.formatted(), tone: .neutral),
+                WisentSignal(
+                    "Latest event", value: activity.first.map { humanized($0.type) } ?? "None",
+                    tone: .neutral),
                 WisentSignal("Cycle", value: state.cycle.formatted(), tone: .neutral),
             ])
 
@@ -108,7 +116,8 @@ struct BeingActivityScreen: View {
                             ForEach(activity) { item in
                                 BeingDenseRow(
                                     title: humanized(item.type),
-                                    detail: item.summary.isEmpty ? "No additional fields" : item.summary,
+                                    detail: item.summary.isEmpty
+                                        ? "No additional fields" : item.summary,
                                     meta: item.timestamp.map(timestamp)
                                 )
                                 if item.id != activity.last?.id { Divider() }

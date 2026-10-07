@@ -19,7 +19,9 @@ final class BeingStore: ObservableObject {
         self.defaults = defaults
         if let stored = defaults.string(forKey: directoryKey) {
             stateDirectory = URL(fileURLWithPath: stored, isDirectory: true)
-        } else if let configured = ProcessInfo.processInfo.environment["SINGULARITY_STATE_DIR"], !configured.isEmpty {
+        } else if let configured = ProcessInfo.processInfo.environment["SINGULARITY_STATE_DIR"],
+            !configured.isEmpty
+        {
             stateDirectory = URL(fileURLWithPath: configured, isDirectory: true)
         } else {
             stateDirectory = nil
@@ -27,7 +29,8 @@ final class BeingStore: ObservableObject {
         }
     }
 
-    static let noDirectoryIssue = "No state directory is selected. Choose the folder the runtime writes to, or start the app with SINGULARITY_STATE_DIR."
+    static let noDirectoryIssue =
+        "No state directory is selected. Choose the folder the runtime writes to, or start the app with SINGULARITY_STATE_DIR."
 
     func selectDirectory(_ url: URL) {
         let selected = url.standardizedFileURL
@@ -65,8 +68,10 @@ final class BeingStore: ObservableObject {
             return
         }
         do {
-            let loadedState = try Self.loadState(stateDirectory.appendingPathComponent("state.json"))
-            let loadedActivity = try Self.loadActivity(stateDirectory.appendingPathComponent("activity.jsonl"))
+            let loadedState = try Self.loadState(
+                stateDirectory.appendingPathComponent("state.json"))
+            let loadedActivity = try Self.loadActivity(
+                stateDirectory.appendingPathComponent("activity.jsonl"))
             state = loadedState
             activity = loadedActivity
             issue = nil
@@ -76,7 +81,8 @@ final class BeingStore: ObservableObject {
             // The monitor re-reads every two seconds, so report only when the
             // failure becomes user-visible state, not on every failed poll.
             if issue != message {
-                let code = (error as? StoreFailure)?.message.hasPrefix("Missing regular file") == true
+                let code =
+                    (error as? StoreFailure)?.message.hasPrefix("Missing regular file") == true
                     ? "infra_down"
                     : "unknown"
                 WisentFailureReporter.shared.report(
@@ -111,12 +117,15 @@ final class BeingStore: ObservableObject {
         }
         return text.split(separator: "\n").enumerated().compactMap { index, line in
             guard let data = line.data(using: .utf8),
-                  let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let type = value["type"] as? String else { return nil }
+                let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let type = value["type"] as? String
+            else { return nil }
             let timestamp = (value["at"] as? String).flatMap(parseDate)
             let fields = ["cycle", "tool", "status", "amount", "source", "message"]
                 .compactMap { key -> String? in value[key].map { "\(key)=\($0)" } }
-            return ActivityLine(id: index, type: type, timestamp: timestamp, summary: fields.joined(separator: " · "))
+            return ActivityLine(
+                id: index, type: type, timestamp: timestamp,
+                summary: fields.joined(separator: " · "))
         }.reversed()
     }
 
@@ -132,7 +141,8 @@ final class BeingStore: ObservableObject {
         let container = try decoder.singleValueContainer()
         let raw = try container.decode(String.self)
         guard let date = parseDate(raw) else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid timestamp")
+            throw DecodingError.dataCorruptedError(
+                in: container, debugDescription: "Invalid timestamp")
         }
         return date
     }

@@ -20,21 +20,30 @@ struct EcosystemRecordsView: View {
                     TextField("Initiative ID, or leave blank for all", text: $initiativeFilter)
                     Button("Read newest records") {
                         Task {
-                            await store.loadRecords(directory, kind: optional(kindFilter), initiativeId: optional(initiativeFilter))
+                            await store.loadRecords(
+                                directory, kind: optional(kindFilter),
+                                initiativeId: optional(initiativeFilter))
                         }
                     }
                 }
                 .disabled(store.busy)
-                Text("Showing \(store.records.count) records · \(store.recordsKind ?? "all kinds") · \(store.recordsInitiative ?? "all initiatives")")
-                    .font(WisentTypeScale.body())
-                Text("Pages show the newest inserts first. Previews are shortened; Read record opens the retained contents without shortening them.")
-                    .foregroundStyle(WisentDesign.secondary)
+                Text(
+                    "Showing \(store.records.count) records · \(store.recordsKind ?? "all kinds") · \(store.recordsInitiative ?? "all initiatives")"
+                )
+                .font(WisentTypeScale.body())
+                Text(
+                    "Pages show the newest inserts first. Previews are shortened; Read record opens the retained contents without shortening them."
+                )
+                .foregroundStyle(WisentDesign.secondary)
                 ForEach(store.records, id: \.key) { record in
                     WisentPanel {
                         VStack(alignment: .leading, spacing: WisentDesign.Space.x2) {
                             Text(record.preview).font(WisentTypeScale.bodyStrong())
-                            Text("\(record.kind) · \(record.state ?? "recorded") · \(record.totalBytes) bytes")
-                            Text(record.id).font(WisentTypeScale.identifierSmall()).textSelection(.enabled)
+                            Text(
+                                "\(record.kind) · \(record.state ?? "recorded") · \(record.totalBytes) bytes"
+                            )
+                            Text(record.id).font(WisentTypeScale.identifierSmall()).textSelection(
+                                .enabled)
                             Text("Created \(record.createdAt) · updated \(record.updatedAt)")
                                 .foregroundStyle(WisentDesign.secondary)
                             Button("Read record") { open(record.key) }
@@ -46,7 +55,8 @@ struct EcosystemRecordsView: View {
                 if let before = store.recordsNext {
                     Button("Read older records") {
                         Task {
-                            await store.loadRecords(directory, kind: store.recordsKind,
+                            await store.loadRecords(
+                                directory, kind: store.recordsKind,
                                 initiativeId: store.recordsInitiative, before: before)
                         }
                     }
@@ -61,15 +71,20 @@ struct EcosystemRecordsView: View {
                             open(.init(kind: kind, id: id))
                         }
                     }
-                    .disabled(store.busy || optional(recordKind) == nil || optional(recordId) == nil)
+                    .disabled(
+                        store.busy || optional(recordKind) == nil || optional(recordId) == nil)
                 }
                 .disabled(store.busy)
                 if let selected {
                     WisentSectionBox(title: "\(selected.kind) / \(selected.id)") {
                         Button("Reload current record") { open(selected) }
                             .disabled(store.busy)
-                        if let chunk = store.recordChunk, chunk.kind == selected.kind, chunk.id == selected.id {
-                            Text("Bytes \(chunk.offset)..<\(chunk.offset + UInt64(chunk.text.utf8.count)) of \(chunk.totalBytes)")
+                        if let chunk = store.recordChunk, chunk.kind == selected.kind,
+                            chunk.id == selected.id
+                        {
+                            Text(
+                                "Bytes \(chunk.offset)..<\(chunk.offset + UInt64(chunk.text.utf8.count)) of \(chunk.totalBytes)"
+                            )
                             Text("SHA-256: \(chunk.contentSha256)")
                                 .font(WisentTypeScale.identifierSmall()).textSelection(.enabled)
                             ScrollView {
@@ -83,8 +98,10 @@ struct EcosystemRecordsView: View {
                                 if let offset = previousOffsets.last {
                                     Button("Previous fragment") {
                                         Task {
-                                            if await store.readRecord(directory, kind: chunk.kind, id: chunk.id,
-                                                offset: offset, revision: chunk.contentSha256) {
+                                            if await store.readRecord(
+                                                directory, kind: chunk.kind, id: chunk.id,
+                                                offset: offset, revision: chunk.contentSha256)
+                                            {
                                                 previousOffsets.removeLast()
                                             }
                                         }
@@ -93,8 +110,10 @@ struct EcosystemRecordsView: View {
                                 if let offset = chunk.nextOffset {
                                     Button("Next fragment") {
                                         Task {
-                                            if await store.readRecord(directory, kind: chunk.kind, id: chunk.id,
-                                                offset: offset, revision: chunk.contentSha256) {
+                                            if await store.readRecord(
+                                                directory, kind: chunk.kind, id: chunk.id,
+                                                offset: offset, revision: chunk.contentSha256)
+                                            {
                                                 previousOffsets.append(chunk.offset)
                                             }
                                         }
@@ -102,8 +121,10 @@ struct EcosystemRecordsView: View {
                                 }
                             }
                             .disabled(store.busy)
-                            Text("Fragments keep this exact version. If the record changes, reload it explicitly; the owner refuses to mix versions.")
-                                .foregroundStyle(WisentDesign.secondary)
+                            Text(
+                                "Fragments keep this exact version. If the record changes, reload it explicitly; the owner refuses to mix versions."
+                            )
+                            .foregroundStyle(WisentDesign.secondary)
                         }
                     }
                 }

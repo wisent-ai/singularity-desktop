@@ -1,5 +1,5 @@
-import Foundation
 import Combine
+import Foundation
 
 @MainActor
 final class EcosystemStore: ObservableObject {
@@ -32,18 +32,22 @@ final class EcosystemStore: ObservableObject {
                 async let observedStatus = EcosystemClient.status(selectedDirectory)
                 async let observedOpportunities = EcosystemClient.opportunities(selectedDirectory)
                 async let observedInitiatives = EcosystemClient.initiatives(selectedDirectory)
-                async let observedRecords = EcosystemClient.records(selectedDirectory, kind: nil, initiativeId: nil)
+                async let observedRecords = EcosystemClient.records(
+                    selectedDirectory, kind: nil, initiativeId: nil)
                 let status = try await observedStatus
                 var opportunities: EcosystemItems<EcosystemOpportunity>?
                 var initiatives: EcosystemItems<EcosystemInitiative>?
                 var records: EcosystemItems<EcosystemRecordSummary>?
                 var issues: [String] = []
-                do { opportunities = try await observedOpportunities }
-                catch { issues.append("Opportunities: \(error.localizedDescription)") }
-                do { initiatives = try await observedInitiatives }
-                catch { issues.append("Initiatives: \(error.localizedDescription)") }
-                do { records = try await observedRecords }
-                catch { issues.append("Records: \(error.localizedDescription)") }
+                do { opportunities = try await observedOpportunities } catch {
+                    issues.append("Opportunities: \(error.localizedDescription)")
+                }
+                do { initiatives = try await observedInitiatives } catch {
+                    issues.append("Initiatives: \(error.localizedDescription)")
+                }
+                do { records = try await observedRecords } catch {
+                    issues.append("Records: \(error.localizedDescription)")
+                }
                 return (status, opportunities, initiatives, records, issues)
             }
             let values = try await wait(work, request: request)
@@ -63,11 +67,14 @@ final class EcosystemStore: ObservableObject {
     }
 
     func olderOpportunities(_ directory: URL) async {
-        guard !Task.isCancelled, self.directory == directory, !busy, let before = opportunityNext else { return }
+        guard !Task.isCancelled, self.directory == directory, !busy, let before = opportunityNext
+        else { return }
         let request = begin()
         defer { finish(request) }
         do {
-            let result = try await wait(Task { try await EcosystemClient.opportunities(directory, before: before) }, request: request)
+            let result = try await wait(
+                Task { try await EcosystemClient.opportunities(directory, before: before) },
+                request: request)
             try Task.checkCancellation()
             guard operation == request else { return }
             opportunities = result.items
@@ -79,11 +86,14 @@ final class EcosystemStore: ObservableObject {
     }
 
     func olderInitiatives(_ directory: URL) async {
-        guard !Task.isCancelled, self.directory == directory, !busy, let before = initiativeNext else { return }
+        guard !Task.isCancelled, self.directory == directory, !busy, let before = initiativeNext
+        else { return }
         let request = begin()
         defer { finish(request) }
         do {
-            let result = try await wait(Task { try await EcosystemClient.initiatives(directory, before: before) }, request: request)
+            let result = try await wait(
+                Task { try await EcosystemClient.initiatives(directory, before: before) },
+                request: request)
             try Task.checkCancellation()
             guard operation == request else { return }
             initiatives = result.items
@@ -94,14 +104,18 @@ final class EcosystemStore: ObservableObject {
         }
     }
 
-    func loadRecords(_ directory: URL, kind: String?, initiativeId: String?, before: Int64? = nil) async {
+    func loadRecords(_ directory: URL, kind: String?, initiativeId: String?, before: Int64? = nil)
+        async
+    {
         guard !Task.isCancelled, self.directory == directory, !busy else { return }
         let request = begin()
         defer { finish(request) }
         do {
-            let result = try await wait(Task {
-                try await EcosystemClient.records(directory, kind: kind, initiativeId: initiativeId, before: before)
-            }, request: request)
+            let result = try await wait(
+                Task {
+                    try await EcosystemClient.records(
+                        directory, kind: kind, initiativeId: initiativeId, before: before)
+                }, request: request)
             try Task.checkCancellation()
             guard operation == request else { return }
             records = result.items
@@ -114,15 +128,19 @@ final class EcosystemStore: ObservableObject {
         }
     }
 
-    func readRecord(_ directory: URL, kind: String, id: String, offset: UInt64 = 0, revision: String? = nil) async -> Bool {
+    func readRecord(
+        _ directory: URL, kind: String, id: String, offset: UInt64 = 0, revision: String? = nil
+    ) async -> Bool {
         guard !Task.isCancelled, self.directory == directory, !busy else { return false }
         let request = begin()
         recordChunk = nil
         defer { finish(request) }
         do {
-            let result = try await wait(Task {
-                try await EcosystemClient.record(directory, kind: kind, id: id, offset: offset, revision: revision)
-            }, request: request)
+            let result = try await wait(
+                Task {
+                    try await EcosystemClient.record(
+                        directory, kind: kind, id: id, offset: offset, revision: revision)
+                }, request: request)
             try Task.checkCancellation()
             guard operation == request else { return false }
             recordChunk = result
@@ -139,7 +157,9 @@ final class EcosystemStore: ObservableObject {
         let request = begin()
         defer { finish(request) }
         do {
-            let work = Task { try await EcosystemClient.status(directory, method: paused ? "pause" : "resume") }
+            let work = Task {
+                try await EcosystemClient.status(directory, method: paused ? "pause" : "resume")
+            }
             let result = try await wait(work, request: request)
             try Task.checkCancellation()
             guard operation == request else { return }
@@ -176,7 +196,9 @@ final class EcosystemStore: ObservableObject {
         clear()
     }
 
-    private func wait<Value: Sendable>(_ work: Task<Value, Error>, request: UUID) async throws -> Value {
+    private func wait<Value: Sendable>(_ work: Task<Value, Error>, request: UUID) async throws
+        -> Value
+    {
         guard operation == request else {
             work.cancel()
             throw CancellationError()
@@ -208,7 +230,8 @@ final class EcosystemStore: ObservableObject {
     private func failed(_ error: Error, request: UUID, discardState: Bool = true) {
         guard operation == request else { return }
         if discardState { clear() }
-        issue = error is CancellationError
+        issue =
+            error is CancellationError
             ? "The owner request was cancelled. Its final state was not confirmed."
             : error.localizedDescription
     }

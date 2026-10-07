@@ -27,7 +27,6 @@ struct EcosystemOwner: Decodable, Sendable {
     let workloadId: String
 }
 
-
 struct EcosystemIssue: Decodable, Sendable {
     let operation: String
     let code: String
@@ -114,34 +113,52 @@ private struct EcosystemEnvelope<Result: Decodable>: Decodable {
 }
 
 enum EcosystemClient {
-    static func status(_ directory: URL, method: String = "status") async throws -> EcosystemStatus {
+    static func status(_ directory: URL, method: String = "status") async throws -> EcosystemStatus
+    {
         try await request(directory, method: method)
     }
 
-    static func opportunities(_ directory: URL, before: Int64? = nil) async throws -> EcosystemItems<EcosystemOpportunity> {
+    static func opportunities(_ directory: URL, before: Int64? = nil) async throws
+        -> EcosystemItems<EcosystemOpportunity>
+    {
         try await request(directory, method: "opportunities", params: .init(before: before))
     }
 
-    static func initiatives(_ directory: URL, before: Int64? = nil) async throws -> EcosystemItems<EcosystemInitiative> {
+    static func initiatives(_ directory: URL, before: Int64? = nil) async throws -> EcosystemItems<
+        EcosystemInitiative
+    > {
         try await request(directory, method: "initiatives", params: .init(before: before))
     }
 
-    static func records(_ directory: URL, kind: String?, initiativeId: String?, before: Int64? = nil) async throws -> EcosystemItems<EcosystemRecordSummary> {
-        try await request(directory, method: "records", params: .init(kind: kind, initiativeId: initiativeId, before: before))
+    static func records(
+        _ directory: URL, kind: String?, initiativeId: String?, before: Int64? = nil
+    ) async throws -> EcosystemItems<EcosystemRecordSummary> {
+        try await request(
+            directory, method: "records",
+            params: .init(kind: kind, initiativeId: initiativeId, before: before))
     }
 
-    static func record(_ directory: URL, kind: String, id: String, offset: UInt64 = 0, revision: String? = nil) async throws -> EcosystemRecordChunk {
-        let value: EcosystemRecordChunk = try await request(directory, method: "record",
+    static func record(
+        _ directory: URL, kind: String, id: String, offset: UInt64 = 0, revision: String? = nil
+    ) async throws -> EcosystemRecordChunk {
+        let value: EcosystemRecordChunk = try await request(
+            directory, method: "record",
             params: .init(id: id, kind: kind, offset: offset, revision: revision))
         let (end, overflow) = offset.addingReportingOverflow(UInt64(value.text.utf8.count))
         guard value.kind == kind, value.id == id, value.offset == offset, !overflow,
-              end <= value.totalBytes,
-              value.nextOffset == (end < value.totalBytes ? end : nil),
-              end > offset || end == value.totalBytes,
-              value.contentSha256.utf8.count == 64,
-              value.contentSha256.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
-              revision == nil || revision == value.contentSha256 else {
-            throw OwnerConnectionFailure(message: "The owner returned a mismatched record fragment. No mixed contents were displayed.")
+            end <= value.totalBytes,
+            value.nextOffset == (end < value.totalBytes ? end : nil),
+            end > offset || end == value.totalBytes,
+            value.contentSha256.utf8.count == 64,
+            value.contentSha256.utf8.allSatisfy({
+                (48...57).contains($0) || (97...102).contains($0)
+            }),
+            revision == nil || revision == value.contentSha256
+        else {
+            throw OwnerConnectionFailure(
+                message:
+                    "The owner returned a mismatched record fragment. No mixed contents were displayed."
+            )
         }
         return value
     }
@@ -150,38 +167,49 @@ enum EcosystemClient {
         let data = try await exchange(directory, method: "explain", params: .init(id: id))
         let envelope = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         guard envelope?["schema_version"] as? Int == OwnerProtocol.ecosystemSchemaVersion,
-              envelope?["ok"] as? Bool == true, let result = envelope?["result"] else {
+            envelope?["ok"] as? Bool == true, let result = envelope?["result"]
+        else {
             let issue = (envelope?["error"] as? [String: Any])?["message"] as? String
-            throw OwnerConnectionFailure(message: issue ?? "The owner returned an invalid explanation.")
+            throw OwnerConnectionFailure(
+                message: issue ?? "The owner returned an invalid explanation.")
         }
-        let rendered = try JSONSerialization.data(withJSONObject: result, options: [.prettyPrinted, .sortedKeys])
+        let rendered = try JSONSerialization.data(
+            withJSONObject: result, options: [.prettyPrinted, .sortedKeys])
         return String(decoding: rendered, as: UTF8.self)
     }
 
-    private static func request<Result: Decodable & Sendable>(_ directory: URL, method: String, params: EcosystemRequest.Params = .init()) async throws -> Result {
+    private static func request<Result: Decodable & Sendable>(
+        _ directory: URL, method: String, params: EcosystemRequest.Params = .init()
+    ) async throws -> Result {
         let data = try await exchange(directory, method: method, params: params)
         let decoder = JSONDecoder()
         decoder.keyDecodingStrategy = .convertFromSnakeCase
         let envelope = try decoder.decode(EcosystemEnvelope<Result>.self, from: data)
         guard envelope.schemaVersion == OwnerProtocol.ecosystemSchemaVersion else {
-            throw OwnerConnectionFailure(message: "The owner returned an unsupported ecosystem protocol.")
+            throw OwnerConnectionFailure(
+                message: "The owner returned an unsupported ecosystem protocol.")
         }
         guard envelope.ok, let result = envelope.result else {
-            throw OwnerConnectionFailure(message: envelope.error.map { "\($0.operation): \($0.code): \($0.message)" }
-                ?? "The owner refused the ecosystem operation without a reason.")
+            throw OwnerConnectionFailure(
+                message: envelope.error.map { "\($0.operation): \($0.code): \($0.message)" }
+                    ?? "The owner refused the ecosystem operation without a reason.")
         }
         return result
     }
 
-    private static func exchange(_ directory: URL, method: String, params: EcosystemRequest.Params = .init()) async throws -> Data {
+    private static func exchange(
+        _ directory: URL, method: String, params: EcosystemRequest.Params = .init()
+    ) async throws -> Data {
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         var body = try encoder.encode(EcosystemRequest(method: method, params: params))
         body.append(OwnerProtocol.newline)
-        let response = try await OwnerConnection.exchange(body,
+        let response = try await OwnerConnection.exchange(
+            body,
             socketPath: directory.appendingPathComponent("ecosystem.sock").path)
         guard response.last == OwnerProtocol.newline else {
-            throw OwnerConnectionFailure(message: "The owner returned an incomplete ecosystem response.")
+            throw OwnerConnectionFailure(
+                message: "The owner returned an incomplete ecosystem response.")
         }
         return response
     }

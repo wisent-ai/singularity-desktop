@@ -7,8 +7,10 @@ struct EcosystemScreen: View {
     @State private var recordsExpanded = false
 
     var body: some View {
-        WisentScreen(title: "Ecosystem", scope: directory.path,
-            freshness: store.status.map { "Owner observed at \($0.updatedAt)" }) {
+        WisentScreen(
+            title: "Ecosystem", scope: directory.path,
+            freshness: store.status.map { "Owner observed at \($0.updatedAt)" }
+        ) {
             HStack {
                 Button("Refresh") { Task { await store.refresh(directory) } }
                 if let status = store.status {
@@ -20,39 +22,63 @@ struct EcosystemScreen: View {
             }
             .disabled(store.busy)
             if let issue = store.issue {
-                WisentEmptyPanel(title: "The operation did not complete", detail: issue, symbol: "exclamationmark.triangle")
+                WisentEmptyPanel(
+                    title: "The operation did not complete", detail: issue,
+                    symbol: "exclamationmark.triangle")
             }
             if let status = store.status {
                 WisentSignalStrip(signals: [
-                    WisentSignal("Selection", value: status.paused ? "Paused" : status.lasCatalogReady ? "Enabled" : "Blocked",
+                    WisentSignal(
+                        "Selection",
+                        value: status.paused
+                            ? "Paused" : status.lasCatalogReady ? "Enabled" : "Blocked",
                         tone: status.paused || !status.lasCatalogReady ? .warning : .brand),
                     WisentSignal("Active work", value: String(status.activeCount), tone: .neutral),
-                    WisentSignal("Observations", value: String(status.observationCount), tone: .neutral)
+                    WisentSignal(
+                        "Observations", value: String(status.observationCount), tone: .neutral),
                 ])
                 WisentCounterRow(counters: [
-                    .init("Spent", value: "$\(status.spentUsd)", detail: "recorded model usage", tone: .neutral),
-                    .init("Reserved", value: "$\(status.reservedUsd)", detail: "includes effects with unknown cost", tone: .warning),
-                    .init("Limit", value: "$\(status.budgetUsd)", detail: "delegated portfolio allocation", tone: .brand)
+                    .init(
+                        "Spent", value: "$\(status.spentUsd)", detail: "recorded model usage",
+                        tone: .neutral),
+                    .init(
+                        "Reserved", value: "$\(status.reservedUsd)",
+                        detail: "includes effects with unknown cost", tone: .warning),
+                    .init(
+                        "Limit", value: "$\(status.budgetUsd)",
+                        detail: "delegated portfolio allocation", tone: .brand),
                 ])
                 WisentSectionBox(title: "Delegated owner", trailing: status.owner.agentId) {
-                    Text("\(status.owner.role) · \(status.owner.environment) · \(status.owner.workloadId)")
+                    Text(
+                        "\(status.owner.role) · \(status.owner.environment) · \(status.owner.workloadId)"
+                    )
                     Text("Runtime: Singularity \(status.runtime.version)")
-                    Text(status.runtime.sourceRevision ?? "No source revision was embedded in this runtime.")
-                        .font(WisentTypeScale.identifierSmall()).textSelection(.enabled)
-                    Text(status.lasCatalogReady
-                        ? "The signed tool catalog was verified. Individual product operations still require their own evidence."
-                        : "The signed tool catalog has not been verified. New selection and dispatch are blocked.")
+                    Text(
+                        status.runtime.sourceRevision
+                            ?? "No source revision was embedded in this runtime."
+                    )
+                    .font(WisentTypeScale.identifierSmall()).textSelection(.enabled)
+                    Text(
+                        status.lasCatalogReady
+                            ? "The signed tool catalog was verified. Individual product operations still require their own evidence."
+                            : "The signed tool catalog has not been verified. New selection and dispatch are blocked."
+                    )
                 }
-                Text("Pausing stops new selection and dispatch. Already dispatched work is reconciled, not cancelled or repeated.")
-                    .font(WisentTypeScale.body())
-                    .foregroundStyle(WisentDesign.secondary)
+                Text(
+                    "Pausing stops new selection and dispatch. Already dispatched work is reconciled, not cancelled or repeated."
+                )
+                .font(WisentTypeScale.body())
+                .foregroundStyle(WisentDesign.secondary)
                 ForEach(status.issues, id: \.operation) { issue in
                     WisentSectionBox(title: issue.operation, trailing: issue.code) {
                         Text(issue.message)
                     }
                 }
             } else if !store.busy && store.issue == nil {
-                WisentEmptyPanel(title: "No live owner response", detail: "Refresh to connect to the ecosystem owner in the selected folder.", symbol: "square.stack.3d.up")
+                WisentEmptyPanel(
+                    title: "No live owner response",
+                    detail: "Refresh to connect to the ecosystem owner in the selected folder.",
+                    symbol: "square.stack.3d.up")
             }
             EcosystemRecordsView(directory: directory, store: store, expanded: $recordsExpanded)
                 .id(directory)
@@ -88,7 +114,9 @@ struct EcosystemScreen: View {
                             Spacer()
                             WisentStatusChip(text: opportunity.status, tone: .neutral)
                         }
-                        Text("\(opportunity.productId ?? "No product identity") · \(opportunity.kind) · estimated $\(opportunity.estimatedCostUsd)")
+                        Text(
+                            "\(opportunity.productId ?? "No product identity") · \(opportunity.kind) · estimated $\(opportunity.estimatedCostUsd)"
+                        )
                         Text(opportunity.description)
                         Text("Why: \(opportunity.rationale)")
                         Text("Expected outcome: \(opportunity.expectedOutcome)")
@@ -101,8 +129,10 @@ struct EcosystemScreen: View {
                 }
             }
             if store.opportunityNext != nil {
-                Button("Read older opportunities") { Task { await store.olderOpportunities(directory) } }
-                    .disabled(store.busy)
+                Button("Read older opportunities") {
+                    Task { await store.olderOpportunities(directory) }
+                }
+                .disabled(store.busy)
             }
         }
     }
@@ -116,18 +146,27 @@ struct EcosystemScreen: View {
                         HStack {
                             Text(initiative.title).font(WisentTypeScale.bodyStrong())
                             Spacer()
-                            WisentStatusChip(text: initiative.state, tone: initiative.blockedReason == nil ? .neutral : .warning)
+                            WisentStatusChip(
+                                text: initiative.state,
+                                tone: initiative.blockedReason == nil ? .neutral : .warning)
                         }
                         Text(initiative.productId ?? "No product identity")
-                        Text("Spent $\(initiative.spentUsd) · reserved $\(initiative.reservedUsd) · limit $\(initiative.budgetUsd)")
-                        if let reason = initiative.blockedReason { Text(reason).foregroundStyle(WisentDesign.secondary) }
+                        Text(
+                            "Spent $\(initiative.spentUsd) · reserved $\(initiative.reservedUsd) · limit $\(initiative.budgetUsd)"
+                        )
+                        if let reason = initiative.blockedReason {
+                            Text(reason).foregroundStyle(WisentDesign.secondary)
+                        }
                         Button("Explain decision and delivery") {
                             Task { await store.explain(initiative.id, directory: directory) }
                         }
                         .disabled(store.busy)
                         Button("Browse execution and outcome history") {
                             recordsExpanded = true
-                            Task { await store.loadRecords(directory, kind: nil, initiativeId: initiative.id) }
+                            Task {
+                                await store.loadRecords(
+                                    directory, kind: nil, initiativeId: initiative.id)
+                            }
                         }
                         .disabled(store.busy)
                         Text(initiative.id).font(WisentTypeScale.identifierSmall())
@@ -135,8 +174,10 @@ struct EcosystemScreen: View {
                 }
             }
             if store.initiativeNext != nil {
-                Button("Read older initiatives") { Task { await store.olderInitiatives(directory) } }
-                    .disabled(store.busy)
+                Button("Read older initiatives") {
+                    Task { await store.olderInitiatives(directory) }
+                }
+                .disabled(store.busy)
             }
         }
     }

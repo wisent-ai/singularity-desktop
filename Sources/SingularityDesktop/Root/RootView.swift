@@ -42,15 +42,16 @@ struct RootView: View {
         // this view, so this is the one place that reaches both.
         .textSelection(.enabled)
         .fileImporter(isPresented: $choosingDirectory, allowedContentTypes: [.folder]) { result in
-            if case let .success(url) = result { store.selectDirectory(url) }
+            if case .success(let url) = result { store.selectDirectory(url) }
         }
         .fileImporter(isPresented: $choosingImport, allowedContentTypes: [.json]) { result in
-            guard case let .success(url) = result else { return }
+            guard case .success(let url) = result else { return }
             importOutcome = .working("Validating with the being's state owner…")
             Task {
                 do {
                     let imported = try await store.importMind(from: url)
-                    importOutcome = imported.accepted
+                    importOutcome =
+                        imported.accepted
                         ? .succeeded(imported.summary)
                         : .failed(imported.summary)
                     destination = .mind
@@ -175,7 +176,7 @@ struct RootView: View {
                     actions: [
                         WisentAction("Choose folder", symbol: "folder", kind: .secondary) {
                             choosingDirectory = true
-                        },
+                        }
                     ]
                 )
             }
@@ -215,5 +216,3 @@ struct RootView: View {
         )
     }
 }
-
-

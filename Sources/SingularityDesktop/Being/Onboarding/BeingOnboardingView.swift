@@ -43,10 +43,12 @@ struct BeingOnboardingView: View {
                             beingLoaded
                                 ? "A being is already readable in the selected folder."
                                 : "No being has been read yet. Choose the runtime's state folder.",
-                            systemImage: beingLoaded ? "checkmark.circle.fill" : "folder.badge.questionmark"
+                            systemImage: beingLoaded
+                                ? "checkmark.circle.fill" : "folder.badge.questionmark"
                         )
                         .font(WisentTypography.bodyMedium(13))
-                        .foregroundStyle(beingLoaded ? WisentDesign.success : WisentDesign.secondary)
+                        .foregroundStyle(
+                            beingLoaded ? WisentDesign.success : WisentDesign.secondary)
                     }
                     WisentActionButton(
                         action: WisentAction(
@@ -114,7 +116,8 @@ struct BeingOnboardingView: View {
             }
             Spacer(minLength: WisentDesign.Space.x4)
             if let step = onboarding.step {
-                WisentBadge("Step \(step.index) of \(step.total)", symbol: "list.number", tone: .brand)
+                WisentBadge(
+                    "Step \(step.index) of \(step.total)", symbol: "list.number", tone: .brand)
             }
         }
     }
@@ -181,9 +184,9 @@ struct BeingWalkthroughSection: View {
     }
 }
 
-private extension Dictionary where Key == String, Value == JSONValue {
-    func text(_ key: String) -> String? {
-        guard case let .string(value)? = self[key] else { return nil }
+extension Dictionary where Key == String, Value == JSONValue {
+    fileprivate func text(_ key: String) -> String? {
+        guard case .string(let value)? = self[key] else { return nil }
         return value
     }
 }

@@ -31,8 +31,7 @@ final class OwnerSocketExchange: @unchecked Sendable {
                 self.deliver()
                 return
             }
-            do { try self.connect() }
-            catch { self.finish(.failure(error)) }
+            do { try self.connect() } catch { self.finish(.failure(error)) }
         }
     }
 
@@ -43,17 +42,23 @@ final class OwnerSocketExchange: @unchecked Sendable {
     private func connect() throws {
         let capacity = MemoryLayout.size(ofValue: sockaddr_un().sun_path)
         guard path.utf8.count < capacity, !path.utf8.contains(OwnerProtocol.zeroByte) else {
-            throw OwnerConnectionFailure(message: "The owner socket path is too long or contains a null byte: \(path)")
+            throw OwnerConnectionFailure(
+                message: "The owner socket path is too long or contains a null byte: \(path)")
         }
         let descriptor = Darwin.socket(AF_UNIX, SOCK_STREAM, 0)
         guard descriptor >= 0 else { throw failure("create socket") }
         self.descriptor = descriptor
         guard fcntl(descriptor, F_SETFL, O_NONBLOCK) == 0,
-              fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0 else {
+            fcntl(descriptor, F_SETFD, FD_CLOEXEC) == 0
+        else {
             throw failure("configure nonblocking socket")
         }
         var noSignal: Int32 = 1
-        guard setsockopt(descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal, socklen_t(MemoryLayout.size(ofValue: noSignal))) == 0 else {
+        guard
+            setsockopt(
+                descriptor, SOL_SOCKET, SO_NOSIGPIPE, &noSignal,
+                socklen_t(MemoryLayout.size(ofValue: noSignal))) == 0
+        else {
             throw failure("configure socket signal handling")
         }
         var address = sockaddr_un()
@@ -89,7 +94,9 @@ final class OwnerSocketExchange: @unchecked Sendable {
         guard getpeereid(descriptor, &uid, &gid) == 0 else { throw failure("read owner identity") }
         let expected = geteuid()
         guard uid == expected else {
-            throw OwnerConnectionFailure(message: "The socket at \(path) belongs to UID \(uid), not this user's UID \(expected).")
+            throw OwnerConnectionFailure(
+                message:
+                    "The socket at \(path) belongs to UID \(uid), not this user's UID \(expected).")
         }
     }
 
@@ -131,11 +138,19 @@ final class OwnerSocketExchange: @unchecked Sendable {
     private func readReady() {
         guard result == nil, let descriptor else { return }
         while true {
-            let count = buffer.withUnsafeMutableBytes { Darwin.read(descriptor, $0.baseAddress, $0.count) }
+            let count = buffer.withUnsafeMutableBytes {
+                Darwin.read(descriptor, $0.baseAddress, $0.count)
+            }
             if count < 0 && errno == EINTR { continue }
             if count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK) { return }
-            guard count >= 0 else { finish(.failure(failure("read response"))); return }
-            if count == 0 { finish(.success(response)); return }
+            guard count >= 0 else {
+                finish(.failure(failure("read response")))
+                return
+            }
+            if count == 0 {
+                finish(.success(response))
+                return
+            }
             response.append(contentsOf: buffer.prefix(count))
         }
     }
@@ -162,6 +177,9 @@ final class OwnerSocketExchange: @unchecked Sendable {
     }
 
     private func failure(_ operation: String, code: Int32 = errno) -> OwnerConnectionFailure {
-        OwnerConnectionFailure(message: "Could not \(operation) at \(path): \(String(cString: strerror(code))). No final owner state was confirmed.")
+        OwnerConnectionFailure(
+            message:
+                "Could not \(operation) at \(path): \(String(cString: strerror(code))). No final owner state was confirmed."
+        )
     }
 }

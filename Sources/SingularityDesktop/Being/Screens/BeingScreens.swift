@@ -26,16 +26,25 @@ struct BeingLifeScreen: View {
             refreshFailure(chrome.issue)
 
             WisentSignalStrip(signals: [
-                WisentSignal("Status", value: state.status.capitalized, tone: beingStatusTone(state.status)),
+                WisentSignal(
+                    "Status", value: state.status.capitalized, tone: beingStatusTone(state.status)),
                 WisentSignal("Cycle", value: state.cycle.formatted(), tone: .brand),
                 WisentSignal("Model", value: state.mind.currentModel, tone: .neutral),
                 WisentSignal("Host", value: state.identity.host, tone: .neutral),
             ])
 
             WisentCounterRow(counters: [
-                .init("Balance", value: money(state.budget.remaining.value), detail: "available for continued operation", tone: state.budget.remaining.value > 0 ? .success : .warning),
-                .init("Earned", value: money(state.budget.earned.value), detail: "trusted credited revenue", tone: .brand),
-                .init("Net", value: money(state.budget.netProfit), detail: "earned minus model and instance costs", tone: state.budget.netProfit >= 0 ? .success : .warning),
+                .init(
+                    "Balance", value: money(state.budget.remaining.value),
+                    detail: "available for continued operation",
+                    tone: state.budget.remaining.value > 0 ? .success : .warning),
+                .init(
+                    "Earned", value: money(state.budget.earned.value),
+                    detail: "trusted credited revenue", tone: .brand),
+                .init(
+                    "Net", value: money(state.budget.netProfit),
+                    detail: "earned minus model and instance costs",
+                    tone: state.budget.netProfit >= 0 ? .success : .warning),
             ])
 
             WisentSectionBox(
@@ -73,7 +82,8 @@ struct BeingLifeScreen: View {
                                 ForEach(activity) { item in
                                     BeingDenseRow(
                                         title: humanized(item.type),
-                                        detail: item.summary.isEmpty ? "No additional fields" : item.summary,
+                                        detail: item.summary.isEmpty
+                                            ? "No additional fields" : item.summary,
                                         meta: item.timestamp.map(timestamp)
                                     )
                                     if item.id != activity.last?.id { Divider() }
@@ -82,7 +92,8 @@ struct BeingLifeScreen: View {
                                 ForEach(state.recentActions) { action in
                                     BeingDenseRow(
                                         title: action.tool,
-                                        detail: "cycle \(action.cycle.formatted()) · \(action.status)",
+                                        detail:
+                                            "cycle \(action.cycle.formatted()) · \(action.status)",
                                         meta: timestamp(action.at),
                                         tone: beingStatusTone(action.status)
                                     )
@@ -121,8 +132,10 @@ struct BeingMindScreen: View {
 
             WisentSignalStrip(signals: [
                 WisentSignal("Rules", value: state.mind.rules.count.formatted(), tone: .brand),
-                WisentSignal("Learnings", value: state.mind.learnings.count.formatted(), tone: .brand),
-                WisentSignal("Memories", value: state.mind.memories.count.formatted(), tone: .neutral),
+                WisentSignal(
+                    "Learnings", value: state.mind.learnings.count.formatted(), tone: .brand),
+                WisentSignal(
+                    "Memories", value: state.mind.memories.count.formatted(), tone: .neutral),
                 WisentSignal("Model", value: state.mind.currentModel, tone: .neutral),
             ])
 
@@ -197,16 +210,27 @@ struct BeingEconomyScreen: View {
             refreshFailure(chrome.issue)
 
             WisentCounterRow(counters: [
-                .init("Balance", value: money(state.budget.remaining.value), detail: "remaining from \(money(state.budget.starting.value))", tone: state.budget.remaining.value > 0 ? .success : .warning),
-                .init("Earned", value: money(state.budget.earned.value), detail: "credited trusted revenue", tone: .brand),
-                .init("Net", value: money(state.budget.netProfit), detail: "revenue minus recorded costs", tone: state.budget.netProfit >= 0 ? .success : .warning),
+                .init(
+                    "Balance", value: money(state.budget.remaining.value),
+                    detail: "remaining from \(money(state.budget.starting.value))",
+                    tone: state.budget.remaining.value > 0 ? .success : .warning),
+                .init(
+                    "Earned", value: money(state.budget.earned.value),
+                    detail: "credited trusted revenue", tone: .brand),
+                .init(
+                    "Net", value: money(state.budget.netProfit),
+                    detail: "revenue minus recorded costs",
+                    tone: state.budget.netProfit >= 0 ? .success : .warning),
             ])
 
             WisentSignalStrip(signals: [
-                WisentSignal("Model cost", value: money(state.budget.apiSpent.value), tone: .neutral),
-                WisentSignal("Instance cost", value: money(state.budget.instanceSpent.value), tone: .neutral),
+                WisentSignal(
+                    "Model cost", value: money(state.budget.apiSpent.value), tone: .neutral),
+                WisentSignal(
+                    "Instance cost", value: money(state.budget.instanceSpent.value), tone: .neutral),
                 WisentSignal("Tokens", value: state.budget.totalTokens.formatted(), tone: .neutral),
-                WisentSignal("Runtime", value: state.status.capitalized, tone: beingStatusTone(state.status)),
+                WisentSignal(
+                    "Runtime", value: state.status.capitalized, tone: beingStatusTone(state.status)),
             ])
 
             WisentSectionBox(
@@ -229,4 +253,3 @@ struct BeingEconomyScreen: View {
         }
     }
 }
-

@@ -81,7 +81,8 @@ final class BeingOnboardingController: ObservableObject {
                 do {
                     try await client.flush()
                 } catch {
-                    errorMessage = "Singularity couldn’t send its first-use events: \(Self.replayFailure(error))"
+                    errorMessage =
+                        "Singularity couldn’t send its first-use events: \(Self.replayFailure(error))"
                 }
             } else {
                 presentation = .presenting
@@ -100,10 +101,12 @@ final class BeingOnboardingController: ObservableObject {
         isWorking = true
         defer { isWorking = false }
         do {
-            guard try await client.advance(
-                evidence: [:],
-                evidenceRevision: Constants.evidenceRevision
-            ) != nil else { return }
+            guard
+                try await client.advance(
+                    evidence: [:],
+                    evidenceRevision: Constants.evidenceRevision
+                ) != nil
+            else { return }
             screen = await client.currentScreen
             try await client.expose(evidenceRevision: Constants.evidenceRevision)
         } catch {
@@ -132,7 +135,8 @@ final class BeingOnboardingController: ObservableObject {
             )
         } catch {
             presentation = .presenting
-            errorMessage = "The being was read, but finishing the guide could not be saved: \(Self.replayFailure(error))"
+            errorMessage =
+                "The being was read, but finishing the guide could not be saved: \(Self.replayFailure(error))"
             return
         }
         guard completed else {
@@ -145,7 +149,8 @@ final class BeingOnboardingController: ObservableObject {
         do {
             try await client.flush()
         } catch {
-            errorMessage = "Singularity recorded first use but couldn’t send its events yet: \(Self.replayFailure(error))"
+            errorMessage =
+                "Singularity recorded first use but couldn’t send its events yet: \(Self.replayFailure(error))"
         }
     }
 
@@ -180,7 +185,9 @@ final class BeingOnboardingController: ObservableObject {
             do {
                 try await client.flush()
             } catch {
-                return .succeeded("Started. The walkthrough is in front of this window; its events were not sent yet: \(Self.replayFailure(error))")
+                return .succeeded(
+                    "Started. The walkthrough is in front of this window; its events were not sent yet: \(Self.replayFailure(error))"
+                )
             }
             return .succeeded("Started. The walkthrough is in front of this window.")
         } catch {
@@ -203,7 +210,7 @@ final class BeingOnboardingController: ObservableObject {
             return "The walkthrough's progress could not be written on this Mac."
         case .transport:
             return "The onboarding service could not be reached."
-        case let .invalid(reason):
+        case .invalid(let reason):
             return reason
         }
     }
@@ -227,7 +234,8 @@ final class BeingOnboardingController: ObservableObject {
             storage: UserDefaultsJourneyStorage(namespace: Constants.storageNamespace),
             fallback: fallback
         )
-        let (bundle, progress) = try await client.start(evidenceRevision: Constants.evidenceRevision)
+        let (bundle, progress) = try await client.start(
+            evidenceRevision: Constants.evidenceRevision)
         screenIDs = bundle.definition.screens.map(\.screenId)
         return (client, progress)
     }
@@ -253,9 +261,9 @@ final class BeingOnboardingController: ObservableObject {
             journeyVersionId: Constants.fallbackVersionID
         )
         guard bundle.definition.productId == Constants.productID,
-              bundle.definition.journeyId == Constants.journeyID,
-              bundle.definition.journeyVersion == Constants.journeyVersion,
-              bundle.definition.firstSuccessFact == Constants.firstSuccessFact
+            bundle.definition.journeyId == Constants.journeyID,
+            bundle.definition.journeyVersion == Constants.journeyVersion,
+            bundle.definition.firstSuccessFact == Constants.firstSuccessFact
         else { throw JourneyClientError.invalid("bundled first-use journey identity") }
         return bundle
     }
@@ -270,4 +278,3 @@ final class BeingOnboardingController: ObservableObject {
         return created
     }
 }
-

@@ -88,7 +88,8 @@ struct FlexibleDecimal: Decodable, Sendable {
             value = Decimal(number)
             return
         }
-        throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected decimal string or number")
+        throw DecodingError.dataCorruptedError(
+            in: container, debugDescription: "Expected decimal string or number")
     }
 }
 

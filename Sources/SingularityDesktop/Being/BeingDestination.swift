@@ -39,7 +39,8 @@ enum BeingDestination: String, CaseIterable, Identifiable {
         case .economy: "View balances, costs, and token use."
         case .children: "View child beings."
         case .activity: "View recent activity and actions."
-        case .ecosystem: "Review opportunities, delivery evidence, outcomes, and delegated spending."
+        case .ecosystem:
+            "Review opportunities, delivery evidence, outcomes, and delegated spending."
         }
     }
 }

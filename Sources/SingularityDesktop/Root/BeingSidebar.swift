@@ -81,10 +81,13 @@ struct BeingSidebar: View {
                             .font(.system(size: 8, weight: .semibold))
                             .foregroundStyle(WisentDesign.muted)
                     }
-                    Text(store.state.map { "\($0.identity.ticker) · \($0.status.capitalized)" } ?? "Choose a folder to begin")
-                        .font(WisentTypeScale.identifierSmall())
-                        .foregroundStyle(WisentDesign.secondary)
-                        .lineLimit(1)
+                    Text(
+                        store.state.map { "\($0.identity.ticker) · \($0.status.capitalized)" }
+                            ?? "Choose a folder to begin"
+                    )
+                    .font(WisentTypeScale.identifierSmall())
+                    .foregroundStyle(WisentDesign.secondary)
+                    .lineLimit(1)
                 }
                 .padding(WisentDesign.Space.x2)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -106,7 +109,9 @@ struct BeingSidebar: View {
 
     private func row(_ item: BeingDestination) -> some View {
         let isSelected = destination == item
-        return Button { destination = item } label: {
+        return Button {
+            destination = item
+        } label: {
             HStack(spacing: WisentDesign.Space.x2) {
                 Image(systemName: item.symbol)
                     .font(.system(size: 11, weight: .medium))
@@ -129,7 +134,9 @@ struct BeingSidebar: View {
             )
             .overlay {
                 RoundedRectangle(cornerRadius: WisentDesign.Radius.small)
-                    .stroke(isSelected ? WisentDesign.border : Color.clear, lineWidth: WisentDesign.hairline)
+                    .stroke(
+                        isSelected ? WisentDesign.border : Color.clear,
+                        lineWidth: WisentDesign.hairline)
             }
             .contentShape(Rectangle())
         }
@@ -138,7 +145,6 @@ struct BeingSidebar: View {
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
         .accessibilityHint(item.rationale)
     }
-
 
     private var statusTone: WisentTone {
         guard let state = store.state else { return .neutral }

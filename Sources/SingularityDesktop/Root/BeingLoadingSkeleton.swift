@@ -72,7 +72,7 @@ struct BeingLoadingSkeleton: View {
     private func strip(_ count: Int) -> some View {
         WisentPanel(padding: 0) {
             HStack(spacing: 0) {
-                ForEach(0 ..< count, id: \.self) { index in
+                ForEach(0..<count, id: \.self) { index in
                     if index > 0 {
                         Rectangle()
                             .fill(WisentDesign.border)
@@ -98,7 +98,7 @@ struct BeingLoadingSkeleton: View {
     private func counters(_ count: Int) -> some View {
         WisentPanel(padding: 0) {
             HStack(spacing: 0) {
-                ForEach(0 ..< count, id: \.self) { index in
+                ForEach(0..<count, id: \.self) { index in
                     if index > 0 {
                         Rectangle()
                             .fill(WisentDesign.border)
@@ -125,7 +125,7 @@ struct BeingLoadingSkeleton: View {
                 alignment: .leading,
                 spacing: WisentDesign.Space.x4
             ) {
-                ForEach(0 ..< count, id: \.self) { _ in
+                ForEach(0..<count, id: \.self) { _ in
                     VStack(alignment: .leading, spacing: WisentDesign.Space.x1) {
                         WisentSkeleton(.line, width: 66, height: 8)
                         WisentSkeleton(.line, width: 150)
@@ -140,7 +140,7 @@ struct BeingLoadingSkeleton: View {
     private func prose(_ lines: Int) -> some View {
         WisentPanel {
             VStack(alignment: .leading, spacing: WisentDesign.Space.x2) {
-                ForEach(0 ..< lines, id: \.self) { index in
+                ForEach(0..<lines, id: \.self) { index in
                     if index == lines - 1 {
                         WisentSkeleton(.line, width: 232)
                     } else {
@@ -155,7 +155,7 @@ struct BeingLoadingSkeleton: View {
     private func denseRows(_ count: Int) -> some View {
         WisentPanel(padding: 0) {
             VStack(spacing: 0) {
-                ForEach(0 ..< count, id: \.self) { index in
+                ForEach(0..<count, id: \.self) { index in
                     HStack(spacing: WisentDesign.Space.x3) {
                         WisentSkeleton(.circle, width: 6, height: 6)
                         WisentSkeleton(.line, width: 116)
@@ -175,7 +175,7 @@ struct BeingLoadingSkeleton: View {
     private func numberedRows(_ count: Int) -> some View {
         WisentPanel(padding: 0) {
             VStack(spacing: 0) {
-                ForEach(0 ..< count, id: \.self) { index in
+                ForEach(0..<count, id: \.self) { index in
                     HStack(alignment: .top, spacing: WisentDesign.Space.x3) {
                         WisentSkeleton(.line, width: 10, height: 9)
                             .frame(width: 24, alignment: .trailing)
@@ -193,7 +193,7 @@ struct BeingLoadingSkeleton: View {
     /// A child being's card: the status badge, then name, chips and one field.
     private func childPanels(_ count: Int) -> some View {
         VStack(spacing: WisentDesign.Space.x3) {
-            ForEach(0 ..< count, id: \.self) { _ in
+            ForEach(0..<count, id: \.self) { _ in
                 WisentPanel {
                     HStack(alignment: .top, spacing: WisentDesign.Space.x4) {
                         WisentSkeleton(.block, width: 40, height: 40)

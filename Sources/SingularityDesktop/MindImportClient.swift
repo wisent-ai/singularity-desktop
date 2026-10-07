@@ -13,10 +13,13 @@ struct MindImportResult: Decodable, Sendable {
 
     var summary: String {
         if accepted {
-            return "Imported \(imported), attributed \(attributed), unchanged \(unchanged). No identity, prompt, budget, finance policy, or tool setting was changed."
+            return
+                "Imported \(imported), attributed \(attributed), unchanged \(unchanged). No identity, prompt, budget, finance policy, or tool setting was changed."
         }
-        let detail = issues.first.map { " First issue: \($0.category) \($0.itemId) — \($0.reason)." } ?? ""
-        return "Import refused: \(conflicting) conflicting and \(rejected) rejected item(s). No state was changed.\(detail)"
+        let detail =
+            issues.first.map { " First issue: \($0.category) \($0.itemId) — \($0.reason)." } ?? ""
+        return
+            "Import refused: \(conflicting) conflicting and \(rejected) rejected item(s). No state was changed.\(detail)"
     }
 }
 
@@ -50,7 +53,9 @@ private struct MindImportFailure: LocalizedError {
 }
 
 enum MindImportClient {
-    static func importDocument(_ documentURL: URL, stateDirectory: URL) async throws -> MindImportResult {
+    static func importDocument(_ documentURL: URL, stateDirectory: URL) async throws
+        -> MindImportResult
+    {
         let encoded = try await Task.detached(priority: .userInitiated) {
             try encodeDocument(documentURL)
         }.value
@@ -62,7 +67,8 @@ enum MindImportClient {
         let envelope = try decoder.decode(MindImportWireResponse.self, from: response)
         guard envelope.ok, let result = envelope.result else {
             throw MindImportFailure(
-                message: envelope.error ?? "The Singularity state owner refused the import without a reason."
+                message: envelope.error
+                    ?? "The Singularity state owner refused the import without a reason."
             )
         }
         return result
@@ -77,7 +83,8 @@ enum MindImportClient {
             forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey]
         )
         guard values.isRegularFile == true, values.isSymbolicLink != true else {
-            throw MindImportFailure(message: "The import must be a regular JSON file, not a folder or symbolic link.")
+            throw MindImportFailure(
+                message: "The import must be a regular JSON file, not a folder or symbolic link.")
         }
         let document = try Data(contentsOf: documentURL, options: [.mappedIfSafe])
         let request = MindImportWireRequest(documentBase64: document.base64EncodedString())
