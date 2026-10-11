@@ -115,14 +115,31 @@ final class BeingStore: ObservableObject {
         guard let text = String(data: data, encoding: .utf8) else {
             throw StoreFailure("Activity journal is not UTF-8")
         }
-        return text.split(separator: "\n").enumerated().compactMap { index, line in
-            guard let data = line.data(using: .utf8),
-                let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-                let type = value["type"] as? String
-            else { return nil }
-            let timestamp = (value["at"] as? String).flatMap(parseDate)
-            let fields = ["cycle", "tool", "status", "amount", "source", "message"]
-                .compactMap { key -> String? in value[key].map { "\(key)=\($0)" } }
+        // A damaged line fails the load with its line number and cause: left
+        // out, the feed showed a shortened history as if it were complete.
+        return try text.split(separator: "\n").enumerated().map { index, line in
+            // The line's number among the journal's nonempty lines, counted
+            // only when one is reported.
+            func damaged(_ reason: String) -> StoreFailure {
+                let number = text[..<line.endIndex].split(separator: "\n").count
+                return StoreFailure("Activity journal line \(number) \(reason)")
+            }
+            let value: Any
+            do {
+                value = try JSONSerialization.jsonObject(with: Data(line.utf8))
+            } catch {
+                throw damaged("is not JSON: \(error.localizedDescription)")
+            }
+            guard let object = value as? [String: Any] else {
+                throw damaged("is not a JSON object")
+            }
+            guard let type = object["type"] as? String else {
+                throw damaged("has no type")
+            }
+            let timestamp = (object["at"] as? String).flatMap(parseDate)
+            let fields = ActivitySummaryField.allCases.compactMap { field -> String? in
+                object[field.rawValue].map { "\(field.rawValue)=\($0)" }
+            }
             return ActivityLine(
                 id: index, type: type, timestamp: timestamp,
                 summary: fields.joined(separator: " · "))

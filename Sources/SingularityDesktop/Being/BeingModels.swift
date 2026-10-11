@@ -99,3 +99,13 @@ struct ActivityLine: Identifiable, Sendable {
     let timestamp: Date?
     let summary: String
 }
+
+/// The journal fields an activity line's summary shows, in display order.
+enum ActivitySummaryField: String, CaseIterable, Sendable {
+    case cycle
+    case tool
+    case status
+    case amount
+    case source
+    case message
+}
