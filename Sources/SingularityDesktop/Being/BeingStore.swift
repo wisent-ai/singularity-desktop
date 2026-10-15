@@ -13,20 +13,34 @@ final class BeingStore: ObservableObject {
     @Published private(set) var stateDirectory: URL?
 
     private let defaults: UserDefaults
-    private let directoryKey = "singularityDesktop.stateDirectory"
+    private static let directoryKey = "singularityDesktop.stateDirectory"
+    private static let stateName = "state.json"
+    private static let journalName = "activity.jsonl"
+    /// The watch over the directory being shown, while `monitor()` runs.
+    private var watch: StateDirectoryWatch?
+    /// Ends `monitor()`'s wait for a directory to read.
+    private var chosen: AsyncStream<Void>.Continuation?
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        if let stored = defaults.string(forKey: directoryKey) {
-            stateDirectory = URL(fileURLWithPath: stored, isDirectory: true)
-        } else if let configured = ProcessInfo.processInfo.environment["SINGULARITY_STATE_DIR"],
-            !configured.isEmpty
-        {
-            stateDirectory = URL(fileURLWithPath: configured, isDirectory: true)
-        } else {
-            stateDirectory = nil
+        stateDirectory = Self.configuredDirectory(defaults)
+        if stateDirectory == nil {
             issue = Self.noDirectoryIssue
         }
+    }
+
+    /// The directory the operator chose before, or the one
+    /// `SINGULARITY_STATE_DIR` names; none when neither says one.
+    private static func configuredDirectory(_ defaults: UserDefaults) -> URL? {
+        if let stored = defaults.string(forKey: directoryKey) {
+            return URL(fileURLWithPath: stored, isDirectory: true)
+        }
+        if let configured = ProcessInfo.processInfo.environment["SINGULARITY_STATE_DIR"],
+            !configured.isEmpty
+        {
+            return URL(fileURLWithPath: configured, isDirectory: true)
+        }
+        return nil
     }
 
     static let noDirectoryIssue =
@@ -35,8 +49,10 @@ final class BeingStore: ObservableObject {
     func selectDirectory(_ url: URL) {
         let selected = url.standardizedFileURL
         stateDirectory = selected
-        defaults.set(selected.path, forKey: directoryKey)
-        Task { await refresh() }
+        defaults.set(selected.path, forKey: Self.directoryKey)
+        // `monitor()` reads the chosen directory and watches it instead.
+        watch?.stop()
+        chosen?.yield()
     }
 
     func openDirectory() {
@@ -45,7 +61,7 @@ final class BeingStore: ObservableObject {
     }
     func importMind(from documentURL: URL) async throws -> MindImportResult {
         guard let stateDirectory else {
-            throw StoreFailure(Self.noDirectoryIssue)
+            throw StoreFailure(Self.noDirectoryIssue, code: .config)
         }
         let result = try await MindImportClient.importDocument(
             documentURL,
@@ -55,11 +71,39 @@ final class BeingStore: ObservableObject {
         return result
     }
 
+    /// Reads the being, then reads it again after each change the runtime
+    /// makes to the state directory, until the task running this ends. Choosing
+    /// another directory moves the watch there. When there is no directory,
+    /// or it cannot be watched, the issue says so and this waits for a choice.
     func monitor() async {
         while !Task.isCancelled {
             await refresh()
-            try? await Task.sleep(for: .seconds(2))
+            guard let stateDirectory else {
+                await nextChoice()
+                continue
+            }
+            do {
+                let watch = try StateDirectoryWatch(
+                    directory: stateDirectory,
+                    journal: stateDirectory.appendingPathComponent(Self.journalName))
+                self.watch = watch
+                defer { self.watch = nil }
+                for try await _ in watch.changes {
+                    watch.taken()
+                    await refresh()
+                }
+            } catch {
+                show(error, at: "singularity.beingstore.watch")
+                await nextChoice()
+            }
         }
+    }
+
+    private func nextChoice() async {
+        let made = AsyncStream<Void>.makeStream()
+        chosen = made.continuation
+        defer { chosen = nil }
+        for await _ in made.stream { return }
     }
 
     func refresh() async {
@@ -69,32 +113,41 @@ final class BeingStore: ObservableObject {
         }
         do {
             let loadedState = try Self.loadState(
-                stateDirectory.appendingPathComponent("state.json"))
+                stateDirectory.appendingPathComponent(Self.stateName))
             let loadedActivity = try Self.loadActivity(
-                stateDirectory.appendingPathComponent("activity.jsonl"))
+                stateDirectory.appendingPathComponent(Self.journalName))
             state = loadedState
             activity = loadedActivity
             issue = nil
             refreshedAt = Date()
         } catch {
-            let message = error.localizedDescription
-            // The monitor re-reads every two seconds, so report only when the
-            // failure becomes user-visible state, not on every failed poll.
-            if issue != message {
-                let code =
-                    (error as? StoreFailure)?.message.hasPrefix("Missing regular file") == true
-                    ? "infra_down"
-                    : "unknown"
-                WisentFailureReporter.shared.report(
-                    failurePoint: "singularity.beingstore.read",
-                    code: code,
-                    service: "singularity",
-                    detail: message,
-                    impact: "The being's state and activity cannot be shown."
-                )
-            }
-            issue = message
+            show(error, at: "singularity.beingstore.read")
         }
+    }
+
+    /// Shows a failure and reports it when it first becomes the shown issue;
+    /// a read after every runtime write repeats it until the cause is gone.
+    private func show(_ error: Error, at failurePoint: String) {
+        let message = error.localizedDescription
+        if issue != message {
+            WisentFailureReporter.shared.report(
+                failurePoint: failurePoint,
+                code: Self.code(of: error).rawValue,
+                service: "singularity",
+                detail: message,
+                impact: "The being's state and activity cannot be shown."
+            )
+        }
+        issue = message
+    }
+
+    /// A failure this store raised carries its code; a file the system could
+    /// not find is the runtime not having written it; anything else is the
+    /// catalogue's unknown, reported with its own description.
+    nonisolated private static func code(of error: Error) -> Code {
+        if let failure = error as? StoreFailure { return failure.code }
+        if let cocoa = error as? CocoaError, cocoa.code == .fileReadNoSuchFile { return .infraDown }
+        return .unknown
     }
 
     nonisolated private static func loadState(_ url: URL) throws -> BeingState {
@@ -104,7 +157,8 @@ final class BeingStore: ObservableObject {
         decoder.dateDecodingStrategy = .custom(decodeDate)
         let state = try decoder.decode(BeingState.self, from: data)
         guard state.schemaVersion == "being-v1" else {
-            throw StoreFailure("Unsupported Singularity state schema: \(state.schemaVersion)")
+            throw StoreFailure(
+                "Unsupported Singularity state schema: \(state.schemaVersion)", code: .refused)
         }
         return state
     }
@@ -113,7 +167,7 @@ final class BeingStore: ObservableObject {
         guard FileManager.default.fileExists(atPath: url.path) else { return [] }
         let data = try regularFile(url)
         guard let text = String(data: data, encoding: .utf8) else {
-            throw StoreFailure("Activity journal is not UTF-8")
+            throw StoreFailure("Activity journal is not UTF-8", code: .refused)
         }
         // A damaged line fails the load with its line number and cause: left
         // out, the feed showed a shortened history as if it were complete.
@@ -122,7 +176,7 @@ final class BeingStore: ObservableObject {
             // only when one is reported.
             func damaged(_ reason: String) -> StoreFailure {
                 let number = text[..<line.endIndex].split(separator: "\n").count
-                return StoreFailure("Activity journal line \(number) \(reason)")
+                return StoreFailure("Activity journal line \(number) \(reason)", code: .refused)
             }
             let value: Any
             do {
@@ -149,7 +203,7 @@ final class BeingStore: ObservableObject {
     nonisolated private static func regularFile(_ url: URL) throws -> Data {
         let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
         guard values.isRegularFile == true, values.isSymbolicLink != true else {
-            throw StoreFailure("Missing regular file: \(url.lastPathComponent)")
+            throw StoreFailure("Missing regular file: \(url.lastPathComponent)", code: .infraDown)
         }
         return try Data(contentsOf: url, options: [.mappedIfSafe])
     }
@@ -171,8 +225,15 @@ final class BeingStore: ObservableObject {
     }
 }
 
+/// A read this store refuses, with the catalogue code it is reported under:
+/// `.infraDown` when the runtime has not written a file, `.refused` when what
+/// it wrote cannot be shown, `.config` when no directory is chosen.
 private struct StoreFailure: LocalizedError {
     let message: String
-    init(_ message: String) { self.message = message }
+    let code: Code
+    init(_ message: String, code: Code) {
+        self.message = message
+        self.code = code
+    }
     var errorDescription: String? { message }
 }
