@@ -164,19 +164,22 @@ final class BeingStore: ObservableObject {
     }
 
     nonisolated private static func loadActivity(_ url: URL) throws -> [ActivityLine] {
-        guard FileManager.default.fileExists(atPath: url.path) else { return [] }
-        let data = try regularFile(url)
+        let data: Data
+        do {
+            data = try regularFile(url)
+        } catch let error as CocoaError where error.code == .fileReadNoSuchFile {
+            return []
+        }
         guard let text = String(data: data, encoding: .utf8) else {
             throw StoreFailure("Activity journal is not UTF-8", code: .refused)
         }
-        // A damaged line fails the load with its line number and cause: left
-        // out, the feed showed a shortened history as if it were complete.
-        return try text.split(separator: "\n").enumerated().map { index, line in
-            // The line's number among the journal's nonempty lines, counted
-            // only when one is reported.
+        // Keep physical line positions; only the final line terminator is not a record.
+        if text.isEmpty { return [] }
+        let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
+        let records = text.hasSuffix("\n") ? lines.dropLast() : lines[...]
+        return try records.enumerated().map { index, line in
             func damaged(_ reason: String) -> StoreFailure {
-                let number = text[..<line.endIndex].split(separator: "\n").count
-                return StoreFailure("Activity journal line \(number) \(reason)", code: .refused)
+                StoreFailure("Activity journal line \(index + 1) \(reason)", code: .refused)
             }
             let value: Any
             do {
