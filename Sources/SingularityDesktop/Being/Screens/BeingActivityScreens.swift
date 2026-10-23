@@ -151,7 +151,7 @@ struct BeingActivityScreen: View {
     }
 }
 
-private struct TextListSection: View {
+struct TextListSection: View {
     let title: String
     let items: [String]
     let emptyTitle: String
@@ -188,7 +188,7 @@ private struct TextListSection: View {
     }
 }
 
-private struct BeingDenseRow: View {
+struct BeingDenseRow: View {
     let title: String
     let detail: String
     let meta: String?
@@ -223,18 +223,18 @@ private struct BeingDenseRow: View {
 
 @MainActor
 @ViewBuilder
-private func refreshFailure(_ issue: String?) -> some View {
-    if issue != nil {
+func refreshFailure(_ issue: String?) -> some View {
+    if let issue {
         WisentErrorBanner(
             title: "The latest refresh failed",
-            detail: "Previously loaded information remains visible."
+            detail: "\(issue) Previously loaded information remains visible."
         )
     }
 }
 
 @MainActor
 @ViewBuilder
-private func fieldGrid(_ fields: [(String, String)]) -> some View {
+func fieldGrid(_ fields: [(String, String)]) -> some View {
     LazyVGrid(
         columns: [GridItem(.adaptive(minimum: 210), spacing: WisentDesign.Space.x5)],
         alignment: .leading,
@@ -255,14 +255,14 @@ func beingStatusTone(_ status: String) -> WisentTone {
     }
 }
 
-private func money(_ value: Decimal) -> String {
+func money(_ value: Decimal) -> String {
     "$" + NSDecimalNumber(decimal: value).stringValue
 }
 
-private func timestamp(_ date: Date) -> String {
+func timestamp(_ date: Date) -> String {
     date.formatted(date: .abbreviated, time: .shortened)
 }
 
-private func humanized(_ value: String) -> String {
+func humanized(_ value: String) -> String {
     value.replacingOccurrences(of: "_", with: " ").capitalized
 }

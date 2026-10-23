@@ -185,7 +185,7 @@ struct BeingWalkthroughSection: View {
 }
 
 extension Dictionary where Key == String, Value == JSONValue {
-    fileprivate func text(_ key: String) -> String? {
+    func text(_ key: String) -> String? {
         guard case .string(let value)? = self[key] else { return nil }
         return value
     }
