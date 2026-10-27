@@ -238,10 +238,10 @@ struct BeingDenseRow: View {
 @MainActor
 @ViewBuilder
 func refreshFailure(_ issue: String?) -> some View {
-    if issue != nil {
+    if let issue {
         WisentErrorBanner(
             title: "The latest refresh failed",
-            detail: "Previously loaded information remains visible."
+            detail: "\(issue) Previously loaded information remains visible."
         )
     }
 }
