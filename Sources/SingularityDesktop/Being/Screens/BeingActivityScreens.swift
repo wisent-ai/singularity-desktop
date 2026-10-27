@@ -43,9 +43,9 @@ struct BeingChildrenScreen: View {
                             WisentPanel {
                                 HStack(alignment: .top, spacing: WisentDesign.Space.x4) {
                                     Image(systemName: "person.crop.circle.badge.checkmark")
-                                        .font(.system(size: 20, weight: .medium))
+                                        .font(.system(size: WisentDesign.Space.x5, weight: .medium))
                                         .foregroundStyle(beingStatusTone(child.status).color)
-                                        .frame(width: 40, height: 40)
+                                        .frame(width: WisentDesign.Space.x10, height: WisentDesign.Space.x10)
                                         .background(
                                             beingStatusTone(child.status).softColor,
                                             in: RoundedRectangle(
@@ -57,7 +57,7 @@ struct BeingChildrenScreen: View {
                                                 .font(WisentTypeScale.section())
                                                 .foregroundStyle(WisentDesign.ink)
                                             WisentStatusChip(text: child.ticker, tone: .brand)
-                                            Spacer(minLength: 0)
+                                            Spacer(minLength: .zero)
                                             WisentStatusChip(
                                                 text: child.status.capitalized,
                                                 tone: beingStatusTone(child.status))
@@ -94,9 +94,7 @@ struct BeingActivityScreen: View {
                 WisentSignal("Events", value: activity.count.formatted(), tone: .brand),
                 WisentSignal(
                     "Recent actions", value: state.recentActions.count.formatted(), tone: .neutral),
-                WisentSignal(
-                    "Latest event", value: activity.first.map { humanized($0.type) } ?? "None",
-                    tone: .neutral),
+                WisentSignal("Latest event", value: latestEvent, tone: .neutral),
                 WisentSignal("Cycle", value: state.cycle.formatted(), tone: .neutral),
             ])
 
@@ -111,8 +109,8 @@ struct BeingActivityScreen: View {
                         symbol: "waveform.path.ecg"
                     )
                 } else {
-                    WisentPanel(padding: 0) {
-                        LazyVStack(spacing: 0) {
+                    WisentPanel(padding: .zero) {
+                        LazyVStack(spacing: .zero) {
                             ForEach(activity) { item in
                                 BeingDenseRow(
                                     title: humanized(item.type),
@@ -132,8 +130,8 @@ struct BeingActivityScreen: View {
                     title: "Recent actions",
                     trailing: state.recentActions.count.formatted()
                 ) {
-                    WisentPanel(padding: 0) {
-                        VStack(spacing: 0) {
+                    WisentPanel(padding: .zero) {
+                        VStack(spacing: .zero) {
                             ForEach(state.recentActions) { action in
                                 BeingDenseRow(
                                     title: action.tool,
@@ -149,9 +147,21 @@ struct BeingActivityScreen: View {
             }
         }
     }
+
+    /// The newest event's type, or that the being has recorded none yet.
+    private var latestEvent: String {
+        switch activity.first {
+        case .some(let latest): humanized(latest.type)
+        case .none: "No event recorded yet"
+        }
+    }
 }
 
-private struct TextListSection: View {
+/// SwiftUI's line limit for a label kept to one line
+/// (https://developer.apple.com/documentation/swiftui/view/linelimit(_:)).
+private let singleLine = 1
+
+struct TextListSection: View {
     let title: String
     let items: [String]
     let emptyTitle: String
@@ -163,19 +173,20 @@ private struct TextListSection: View {
             if items.isEmpty {
                 WisentEmptyPanel(title: emptyTitle, detail: emptyDetail, symbol: symbol)
             } else {
-                WisentPanel(padding: 0) {
-                    VStack(spacing: 0) {
+                WisentPanel(padding: .zero) {
+                    VStack(spacing: .zero) {
                         ForEach(items.indices, id: \.self) { index in
                             HStack(alignment: .top, spacing: WisentDesign.Space.x3) {
-                                Text("\(index + 1)")
+                                // The item's place in the list as a reader counts it.
+                                Text("\(items[...index].count)")
                                     .font(WisentTypeScale.identifierSmall())
                                     .foregroundStyle(WisentDesign.muted)
-                                    .frame(width: 24, alignment: .trailing)
+                                    .frame(width: WisentDesign.Space.x6, alignment: .trailing)
                                 Text(items[index])
                                     .font(WisentTypeScale.body())
                                     .foregroundStyle(WisentDesign.ink)
                                     .fixedSize(horizontal: false, vertical: true)
-                                Spacer(minLength: 0)
+                                Spacer(minLength: .zero)
                             }
                             .padding(.horizontal, WisentDesign.Space.x4)
                             .padding(.vertical, WisentDesign.Space.x3)
@@ -188,7 +199,7 @@ private struct TextListSection: View {
     }
 }
 
-private struct BeingDenseRow: View {
+struct BeingDenseRow: View {
     let title: String
     let detail: String
     let meta: String?
@@ -198,21 +209,24 @@ private struct BeingDenseRow: View {
         HStack(alignment: .firstTextBaseline, spacing: WisentDesign.Space.x3) {
             Circle()
                 .fill(tone == .neutral ? WisentDesign.muted : tone.color)
-                .frame(width: 6, height: 6)
+                .frame(width: WisentDesign.Space.x2, height: WisentDesign.Space.x2)
             Text(title)
                 .font(WisentTypeScale.bodyStrong())
                 .foregroundStyle(WisentDesign.ink)
-                .frame(minWidth: 116, alignment: .leading)
+                .frame(
+                    minWidth: WisentDesign.Space.x10 + WisentDesign.Space.x10
+                        + WisentDesign.Space.x8 + WisentDesign.Space.x1,
+                    alignment: .leading)
             Text(detail)
                 .font(WisentTypeScale.identifierSmall())
                 .foregroundStyle(WisentDesign.secondary)
-                .lineLimit(2)
+                .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: WisentDesign.Space.x3)
             if let meta {
                 Text(meta)
                     .font(WisentTypeScale.identifierSmall())
                     .foregroundStyle(WisentDesign.muted)
-                    .lineLimit(1)
+                    .lineLimit(singleLine)
             }
         }
         .padding(.horizontal, WisentDesign.Space.x4)
@@ -223,7 +237,7 @@ private struct BeingDenseRow: View {
 
 @MainActor
 @ViewBuilder
-private func refreshFailure(_ issue: String?) -> some View {
+func refreshFailure(_ issue: String?) -> some View {
     if issue != nil {
         WisentErrorBanner(
             title: "The latest refresh failed",
@@ -234,14 +248,21 @@ private func refreshFailure(_ issue: String?) -> some View {
 
 @MainActor
 @ViewBuilder
-private func fieldGrid(_ fields: [(String, String)]) -> some View {
+func fieldGrid(_ fields: [(label: String, value: String)]) -> some View {
     LazyVGrid(
-        columns: [GridItem(.adaptive(minimum: 210), spacing: WisentDesign.Space.x5)],
+        columns: [
+            GridItem(
+                .adaptive(
+                    minimum: WisentDesign.Space.x10 + WisentDesign.Space.x10
+                        + WisentDesign.Space.x10 + WisentDesign.Space.x10
+                        + WisentDesign.Space.x8 + WisentDesign.Space.x4),
+                spacing: WisentDesign.Space.x5)
+        ],
         alignment: .leading,
         spacing: WisentDesign.Space.x4
     ) {
-        ForEach(fields, id: \.0) { field in
-            WisentField(label: field.0, value: field.1)
+        ForEach(fields, id: \.label) { field in
+            WisentField(label: field.label, value: field.value)
         }
     }
 }
@@ -255,14 +276,14 @@ func beingStatusTone(_ status: String) -> WisentTone {
     }
 }
 
-private func money(_ value: Decimal) -> String {
+func money(_ value: Decimal) -> String {
     "$" + NSDecimalNumber(decimal: value).stringValue
 }
 
-private func timestamp(_ date: Date) -> String {
+func timestamp(_ date: Date) -> String {
     date.formatted(date: .abbreviated, time: .shortened)
 }
 
-private func humanized(_ value: String) -> String {
+func humanized(_ value: String) -> String {
     value.replacingOccurrences(of: "_", with: " ").capitalized
 }
